@@ -1013,7 +1013,7 @@
     function buildProjects() {
       const el = document.getElementById('p-projects');
       const h = div('page-h1'); h.textContent = 'Projects'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Robotic builds and pipeline experiments. Source code, validation documentation, and build logs linked where available.'; el.appendChild(s);
+      const s = div('page-sub'); s.textContent = 'Browse all projects.'; el.appendChild(s);
 
       DATA.projects.forEach(p => {
         const e = div('entry');
@@ -1095,7 +1095,7 @@
     async function buildTools() {
       const el = document.getElementById('p-tools');
       const h = div('page-h1'); h.textContent = 'Tools'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Open source tools. Links go to GitHub and PyPI.'; el.appendChild(s);
+      const s = div('page-sub'); s.textContent = 'All publicly available tools.'; el.appendChild(s);
 
       const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
