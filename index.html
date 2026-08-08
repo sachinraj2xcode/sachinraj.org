@@ -998,23 +998,28 @@
     }
 
     /* ── BLOG — Blogger API ── */
-    const BLOGGER_FEED = 'https://www.blogger.com/feeds/383089026662479161/posts/default?alt=json&max-results=20';
+    const BLOGGER_FEED = 'https://www.blogger.com/feeds/383089026662479161/posts/default?alt=json-in-script&max-results=20';
 
-    async function buildBlog() {
+    function buildBlog() {
       const el = document.getElementById('p-blog');
-      const h = div('page-h1'); h.textContent = 'PrecisionGlue'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Writing on robotics, validation, and the engineering between them. All posts written by Sachin Raj.'; el.appendChild(s);
+      const h = div('page-h1'); h.textContent = 'Articles'; el.appendChild(h);
+      const s = div('page-sub'); s.textContent = 'All my articles and posts.'; el.appendChild(s);
 
       const loading = div('blog-loading'); loading.textContent = 'Loading posts...'; el.appendChild(loading);
 
-      try {
-        const res = await fetch(BLOGGER_FEED);
-        const data = await res.json();
-        el.removeChild(loading);
-        const entries = (data.feed && data.feed.entry) || [];
+      // use JSONP to avoid CORS
+      const callbackName = 'bloggerCallback_' + Date.now();
+      const script = document.createElement('script');
+      script.src = BLOGGER_FEED + '&callback=' + callbackName;
 
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        el.removeChild(loading);
+
+        const entries = (data.feed && data.feed.entry) || [];
         if (entries.length === 0) {
-          const empty = div('blog-loading'); empty.textContent = 'No posts yet.'; el.appendChild(empty); return;
+          const empty = div('blog-loading'); empty.textContent = 'No posts yet — check back soon.'; el.appendChild(empty); return;
         }
 
         el.appendChild(buildFeaturedPost(entries[0]));
@@ -1025,10 +1030,16 @@
           entries.slice(1).forEach(e => grid.appendChild(buildPostCard(e)));
           el.appendChild(grid);
         }
-      } catch(err) {
+      };
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.head.removeChild(script);
         el.removeChild(loading);
-        const e = div('blog-loading'); e.textContent = 'Could not load posts. Check back soon.'; el.appendChild(e);
-      }
+        const e = div('blog-loading'); e.textContent = 'No posts yet — check back soon.'; el.appendChild(e);
+      };
+
+      document.head.appendChild(script);
     }
 
     function getPostUrl(entry) {
