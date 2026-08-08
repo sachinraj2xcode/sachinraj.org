@@ -11,34 +11,35 @@
     "The goal is simple: make sure the systems I build work as intended.",
     "Papers and build logs are open. Tools link to GitHub and PyPI. Leave a note if you want to connect."
   ],
-  "projects": [],
-  "papers": [],
-  "tools": [],
-  "posts": [],
-  "socials": [
-    {
-      "label": "LinkedIn",
-      "url": "https://www.linkedin.com/in/sachin-raj-sr/"
-    },
-    {
-      "label": "GitHub",
-      "url": "#"
-    },
-    {
-      "label": "YouTube",
-      "url": "#"
-    },
-    {
-      "label": "ResearchGate",
-      "url": "#"
-    },
-    {
-      "label": "X / Twitter",
-      "url": "#"
-    }
-  ],
-  "contact": {
-    "note": "Open to research collaboration, technical questions about the tools or papers, and conversations with engineers working on robotic systems and validation methodology.",
-    "formspree_id": "YOUR_FORMSPREE_ID"
+],
+"projects": [],
+"papers": [],
+"tools": [],
+"posts": [],
+"socials": [
+  {
+    "label": "LinkedIn",
+    "url": "https://www.linkedin.com/in/sachin-raj-sr/"
+  },
+  {
+    "label": "GitHub",
+    "url": "#"
+  },
+  {
+    "label": "YouTube",
+    "url": "#"
+  },
+  {
+    "label": "ResearchGate",
+    "url": "#"
+  },
+  {
+    "label": "X / Twitter",
+    "url": "#"
   }
+],
+"contact": {
+  "note": "Open to research collaboration, technical questions about the tools or papers, and conversations with engineers working on robotic systems and validation methodology.",
+  "formspree_id": "YOUR_FORMSPREE_ID"
+}
 }
