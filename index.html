@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sachin Raj</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+:root {
+  --bg:      #0F0F0E;
+  --surface: #161614;
+  --border:  #252422;
+  --text:    #E4E0D8;
+  --sub:     #9A9690;
+  --faint:   #3C3A36;
+  --amber:   #C8974A;
+  --amber-d: #A07838;
+}
+[data-theme="light"] {
+  --bg:      #F6F4EF;
+  --surface: #EDEAE3;
+  --border:  #D4D0C8;
+  --text:    #1A1916;
+  --sub:     #6A6660;
+  --faint:   #C8C4BC;
+  --amber:   #8B5E28;
+  --amber-d: #A87030;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  transition: background 0.25s, color 0.25s;
+}
+
+/* ── LAYOUT ── */
+#app { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+#sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 1.75rem;
+  z-index: 100;
+  transition: background 0.25s;
+}
+
+#s-name {
+  font-family: 'Fraunces', serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 0.3rem;
+  line-height: 1.25;
+}
+
+#s-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  margin-bottom: 2.5rem;
+}
+
+#sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+#sidebar nav a {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: var(--sub);
+  padding: 0.55rem 0.8rem;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  transition: background 0.15s, color 0.15s;
+}
+#sidebar nav a:hover { background: var(--border); color: var(--text); }
+#sidebar nav a.active { background: var(--border); color: var(--text); font-weight: 400; }
+
+.s-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* toggle */
+.toggle {
+  display: flex; align-items: center; gap: 0.6rem;
+  cursor: pointer; user-select: none;
+}
+.t-word {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem; letter-spacing: 0.07em;
+  color: var(--sub); width: 28px;
+}
+.t-track {
+  width: 34px; height: 18px;
+  background: var(--faint); border-radius: 99px;
+  position: relative; transition: background 0.2s;
+}
+.t-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 12px; height: 12px;
+  background: var(--sub); border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+[data-theme="light"] .t-thumb { transform: translateX(16px); background: var(--amber); }
+
+/* socials */
+#s-socials { display: flex; flex-direction: column; gap: 0.35rem; }
+#s-socials a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.04em;
+  color: var(--sub); text-decoration: none;
+  transition: color 0.15s;
+}
+#s-socials a:hover { color: var(--amber); }
+
+/* ── CONTENT ── */
+#content {
+  margin-left: 240px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 5rem 4rem;
+}
+
+.page { display: none; width: 100%; max-width: 660px; }
+.page.active { display: block; }
+
+/* ── SHARED COMPONENTS ── */
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--amber);
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.page-h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem; font-weight: 400; line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+.page-sub {
+  font-size: 0.95rem; color: var(--sub);
+  line-height: 1.75; margin-bottom: 2.75rem;
+  padding-bottom: 2.5rem; border-bottom: 1px solid var(--border);
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+.tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.56rem; letter-spacing: 0.05em;
+  color: var(--sub); border: 1px solid var(--border);
+  padding: 0.2rem 0.55rem; border-radius: 3px;
+}
+
+.out-links { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.out-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem; letter-spacing: 0.05em;
+  color: var(--amber); text-decoration: none;
+  border-bottom: 1px solid transparent; padding-bottom: 1px;
+  transition: border-color 0.15s;
+}
+.out-link:hover { border-color: var(--amber); }
+
+/* ── HOME ── */
+.intro-block {
+  padding-bottom: 3rem; border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+}
+.intro-block p {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem; font-weight: 400;
+  line-height: 1.9; color: var(--text);
+}
+.intro-block p + p { margin-top: 1rem; }
+.intro-block a {
+  color: var(--amber);
+  border-bottom: 1px solid var(--amber-d); padding-bottom: 1px;
+  transition: border-color 0.15s; cursor: pointer;
+}
+.intro-block a:hover { border-color: var(--amber); }
+
+.idx-block { margin-bottom: 3rem; }
+.idx-row {
+  display: flex; justify-content: space-between;
+  align-items: baseline; gap: 1.5rem;
+  padding: 0.85rem 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: padding-left 0.18s;
+}
+.idx-row:first-of-type { border-top: 1px solid var(--border); }
+.idx-row:hover { padding-left: 6px; }
+.idx-row:hover .idx-t { color: var(--amber); }
+.idx-t { font-size: 0.9rem; color: var(--text); line-height: 1.45; transition: color 0.15s; }
+.idx-m { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
+
+/* ── PROJECTS ── */
+.entry { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+.entry:last-child { border-bottom: none; padding-bottom: 0; }
+.entry-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-bottom: 1rem; }
+.entry-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 400; line-height: 1.3; }
+.badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.56rem;
+  letter-spacing: 0.06em; color: var(--sub);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 0.25rem 0.6rem; border-radius: 3px;
+  white-space: nowrap; flex-shrink: 0; margin-top: 0.2rem;
+}
+.entry p { font-size: 0.92rem; color: var(--sub); line-height: 1.8; margin-bottom: 0.6rem; }
+.entry p:last-of-type { margin-bottom: 0; }
+
+/* ── PAPERS ── */
+.paper { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+.paper:last-child { border-bottom: none; padding-bottom: 0; }
+.paper-status {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.58rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 0.6rem;
+}
+.paper-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.35; margin-bottom: 0.4rem; }
+.paper-authors { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--sub); margin-bottom: 0.9rem; }
+.paper p { font-size: 0.92rem; color: var(--sub); line-height: 1.8; }
+
+/* ── TOOLS ── */
+.tool { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+.tool:last-child { border-bottom: none; padding-bottom: 0; }
+.tool-name { font-family: 'JetBrains Mono', monospace; font-size: 1rem; font-weight: 400; color: var(--text); margin-bottom: 0.2rem; }
+.tool-ver { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--sub); margin-bottom: 0.85rem; }
+.tool p { font-size: 0.92rem; color: var(--sub); line-height: 1.8; margin-bottom: 0.6rem; }
+.tool-commercial .tool-name { color: var(--amber); }
+
+/* ── BLOG ── */
+.post { padding: 2.25rem 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: padding-left 0.18s; }
+.post:last-child { border-bottom: none; padding-bottom: 0; }
+.post:hover { padding-left: 6px; }
+.post:hover .post-title { color: var(--amber); }
+.post-date { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.07em; color: var(--sub); margin-bottom: 0.5rem; }
+.post-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.35; margin-bottom: 0.55rem; transition: color 0.15s; }
+.post p { font-size: 0.9rem; color: var(--sub); line-height: 1.75; }
+
+/* ── CONTACT ── */
+.contact-note { font-size: 0.95rem; color: var(--sub); line-height: 1.8; margin-bottom: 2.5rem; }
+.c-row { display: flex; align-items: baseline; gap: 2rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+.c-row:first-child { border-top: 1px solid var(--border); }
+.c-key { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.07em; color: var(--sub); width: 80px; flex-shrink: 0; }
+.c-val { font-size: 0.92rem; color: var(--text); }
+.c-val a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--faint); padding-bottom: 1px; transition: color 0.15s, border-color 0.15s; }
+.c-val a:hover { color: var(--amber); border-color: var(--amber); }
+
+/* contact form */
+.c-form { margin-top: 3rem; }
+.c-form-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; margin-bottom: 1.5rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-field.full { grid-column: 1 / -1; }
+.form-field label { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; color: var(--sub); text-transform: uppercase; }
+.form-field input,
+.form-field textarea {
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 300;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); padding: 0.65rem 0.85rem;
+  outline: none; transition: border-color 0.15s;
+  resize: vertical;
+}
+.form-field input:focus,
+.form-field textarea:focus { border-color: var(--amber); }
+.form-field textarea { min-height: 120px; }
+.form-submit {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+  letter-spacing: 0.08em; background: var(--amber);
+  color: var(--bg); border: none; padding: 0.7rem 1.5rem;
+  cursor: pointer; transition: opacity 0.15s; margin-top: 0.5rem;
+}
+.form-submit:hover { opacity: 0.85; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 800px) {
+  #app { flex-direction: column; }
+  #sidebar {
+    position: relative; width: 100%; height: auto;
+    flex-direction: column; padding: 1.5rem;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  #s-role { margin-bottom: 1rem; }
+  #sidebar nav { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
+  #sidebar nav a { font-size: 0.8rem; padding: 0.35rem 0.6rem; }
+  .s-bottom { flex-direction: row; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1.25rem; }
+  #s-socials { flex-direction: row; flex-wrap: wrap; gap: 0.75rem; }
+  #content { margin-left: 0; padding: 2.5rem 1.5rem; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<aside id="sidebar">
+  <div>
+    <div id="s-name" onclick="go('home')"></div>
+    <div id="s-role"></div>
+  </div>
+  <nav id="s-nav"></nav>
+  <div class="s-bottom">
+    <div class="toggle" onclick="toggleTheme()">
+      <span class="t-word" id="t-word">light</span>
+      <div class="t-track"><div class="t-thumb"></div></div>
+    </div>
+    <div id="s-socials"></div>
+  </div>
+</aside>
+
+<div id="content">
+  <div id="p-home"     class="page active"></div>
+  <div id="p-projects" class="page"></div>
+  <div id="p-papers"   class="page"></div>
+  <div id="p-tools"    class="page"></div>
+  <div id="p-blog"     class="page"></div>
+  <div id="p-contact"  class="page"></div>
+</div>
+
+</div>
+
+<script>
+const PAGES = ['home','projects','papers','tools','blog','contact'];
+const NAV_LABELS = { home:'Home', projects:'Projects', papers:'Papers', tools:'Tools', blog:'Blog', contact:'Contact' };
+
+let DATA = {};
+
+async function init() {
+  const res = await fetch('content.json');
+  DATA = await res.json();
+  buildSidebar();
+  buildHome();
+  buildProjects();
+  buildPapers();
+  buildTools();
+  buildBlog();
+  buildContact();
+}
+
+/* ── SIDEBAR ── */
+function buildSidebar() {
+  document.getElementById('s-name').textContent = DATA.site.name;
+  document.getElementById('s-role').textContent = DATA.site.role;
+  document.title = DATA.site.name;
+
+  const nav = document.getElementById('s-nav');
+  PAGES.forEach(id => {
+    const a = document.createElement('a');
+    a.textContent = NAV_LABELS[id];
+    a.id = 'n-' + id;
+    if (id === 'home') a.classList.add('active');
+    a.onclick = () => go(id);
+    nav.appendChild(a);
+  });
+
+  const socials = document.getElementById('s-socials');
+  DATA.socials.filter(s => s.url !== '#').forEach(s => {
+    const a = document.createElement('a');
+    a.textContent = s.label;
+    a.href = s.url;
+    a.target = '_blank';
+    socials.appendChild(a);
+  });
+}
+
+/* ── HOME ── */
+function buildHome() {
+  const el = document.getElementById('p-home');
+
+  // intro
+  const intro = div('intro-block');
+  DATA.intro.forEach((t, i) => {
+    const p = document.createElement('p');
+    // linkify navigation references
+    p.innerHTML = t
+      .replace('Papers', '<a onclick="go(\'papers\')">Papers</a>')
+      .replace('Tools', '<a onclick="go(\'tools\')">Tools</a>')
+      .replace('blog', '<a onclick="go(\'blog\')">blog</a>');
+    intro.appendChild(p);
+  });
+  el.appendChild(intro);
+
+  // projects index
+  el.appendChild(buildIdx('Projects', DATA.projects.map(p => ({
+    title: p.title, meta: p.year + (p.status ? ' · ' + p.status : ''), page: 'projects'
+  }))));
+
+  // papers index
+  el.appendChild(buildIdx('Papers', DATA.papers.map(p => ({
+    title: p.title, meta: p.status.toLowerCase(), page: 'papers'
+  }))));
+
+  // tools index
+  el.appendChild(buildIdx('Tools', DATA.tools.filter(t => t.type === 'free').map(t => ({
+    title: t.name + ' — ' + t.description.split('.')[0].toLowerCase(), meta: 'Python', page: 'tools'
+  }))));
+
+  // blog index
+  el.appendChild(buildIdx('PrecisionGlue — recent writing', DATA.posts.slice(0, 3).map(p => ({
+    title: p.title, meta: p.date, page: 'blog'
+  }))));
+}
+
+function buildIdx(label, rows) {
+  const block = div('idx-block');
+  const lbl = div('section-label'); lbl.textContent = label;
+  block.appendChild(lbl);
+  rows.forEach(r => {
+    const row = div('idx-row');
+    row.onclick = () => go(r.page);
+    const t = div('idx-t'); t.textContent = r.title;
+    const m = div('idx-m'); m.textContent = r.meta;
+    row.appendChild(t); row.appendChild(m);
+    block.appendChild(row);
+  });
+  return block;
+}
+
+/* ── PROJECTS ── */
+function buildProjects() {
+  const el = document.getElementById('p-projects');
+  const h = div('page-h1'); h.textContent = 'Projects'; el.appendChild(h);
+  const s = div('page-sub'); s.textContent = 'Robotic builds and pipeline experiments. Source code, validation documentation, and build logs linked where available.'; el.appendChild(s);
+
+  DATA.projects.forEach(p => {
+    const e = div('entry');
+    const top = div('entry-top');
+    const title = div('entry-title'); title.textContent = p.title;
+    const badge = div('badge'); badge.textContent = p.year + (p.status ? ' · ' + p.status : '');
+    top.appendChild(title); top.appendChild(badge);
+    e.appendChild(top);
+
+    const desc = document.createElement('p'); desc.textContent = p.description;
+    e.appendChild(desc);
+    if (p.description2) {
+      const desc2 = document.createElement('p'); desc2.textContent = p.description2;
+      e.appendChild(desc2);
+    }
+
+    e.appendChild(buildTags(p.tags));
+    e.appendChild(buildLinks(p.links));
+    el.appendChild(e);
+  });
+}
+
+/* ── PAPERS ── */
+function buildPapers() {
+  const el = document.getElementById('p-papers');
+  const h = div('page-h1'); h.textContent = 'Papers'; el.appendChild(h);
+  const s = div('page-sub'); s.textContent = 'Abstracts here. Full text at the journal or preprint server.'; el.appendChild(s);
+
+  DATA.papers.forEach(p => {
+    const e = div('paper');
+    const st = div('paper-status'); st.textContent = p.status; e.appendChild(st);
+    const ti = div('paper-title'); ti.textContent = p.title; e.appendChild(ti);
+    const au = div('paper-authors'); au.textContent = p.authors; e.appendChild(au);
+    const ab = document.createElement('p'); ab.textContent = p.abstract; e.appendChild(ab);
+    e.appendChild(buildLinks(p.links));
+    el.appendChild(e);
+  });
+}
+
+/* ── TOOLS ── */
+function buildTools() {
+  const el = document.getElementById('p-tools');
+  const h = div('page-h1'); h.textContent = 'Tools'; el.appendChild(h);
+  const s = div('page-sub'); s.textContent = 'Open source Python libraries. MIT licensed. Links go directly to GitHub and PyPI.'; el.appendChild(s);
+
+  DATA.tools.forEach(t => {
+    const e = div('tool' + (t.type === 'commercial' ? ' tool-commercial' : ''));
+    const name = div('tool-name'); name.textContent = t.name; e.appendChild(name);
+    if (t.version) { const ver = div('tool-ver'); ver.textContent = t.version; e.appendChild(ver); }
+    const desc = document.createElement('p'); desc.textContent = t.description; e.appendChild(desc);
+    if (t.tags.length) e.appendChild(buildTags(t.tags));
+    e.appendChild(buildLinks(t.links));
+    el.appendChild(e);
+  });
+}
+
+/* ── BLOG ── */
+function buildBlog() {
+  const el = document.getElementById('p-blog');
+  const h = div('page-h1'); h.textContent = 'PrecisionGlue'; el.appendChild(h);
+  const s = div('page-sub'); s.textContent = 'Writing on robotics, validation, and the engineering between them. All posts written by Sachin Raj.'; el.appendChild(s);
+
+  DATA.posts.forEach(p => {
+    const e = div('post');
+    const d = div('post-date'); d.textContent = p.date; e.appendChild(d);
+    const t = div('post-title'); t.textContent = p.title; e.appendChild(t);
+    const ex = document.createElement('p'); ex.textContent = p.excerpt; e.appendChild(ex);
+    el.appendChild(e);
+  });
+}
+
+/* ── CONTACT ── */
+function buildContact() {
+  const el = document.getElementById('p-contact');
+  const h = div('page-h1'); h.textContent = 'Contact'; el.appendChild(h);
+  const s = div('page-sub'); s.textContent = DATA.contact.note; el.appendChild(s);
+
+  // socials table
+  DATA.socials.filter(s => s.url !== '#').forEach(s => {
+    const row = div('c-row');
+    const key = div('c-key'); key.textContent = s.label.toLowerCase(); row.appendChild(key);
+    const val = div('c-val');
+    const a = document.createElement('a'); a.href = s.url; a.target = '_blank'; a.textContent = s.url === '#' ? 'placeholder' : s.url.replace('https://', '');
+    val.appendChild(a); row.appendChild(val);
+    el.appendChild(row);
+  });
+
+  // form
+  const form = div('c-form');
+  const ft = div('c-form-title'); ft.textContent = 'Leave a note'; form.appendChild(ft);
+
+  const action = `https://formspree.io/f/${DATA.contact.formspree_id}`;
+  const f = document.createElement('form');
+  f.method = 'POST'; f.action = action;
+
+  f.innerHTML = `
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Name</label>
+        <input type="text" name="name" placeholder="Your name" required>
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="your@email.com" required>
+      </div>
+      <div class="form-field">
+        <label>Website <span style="opacity:.5;font-size:.9em">(optional)</span></label>
+        <input type="url" name="website" placeholder="https://yoursite.com">
+      </div>
+      <div class="form-field full">
+        <label>Comment</label>
+        <textarea name="message" placeholder="What's on your mind?" required></textarea>
+      </div>
+    </div>
+    <button type="submit" class="form-submit">Send →</button>
+  `;
+  form.appendChild(f);
+  el.appendChild(form);
+}
+
+/* ── HELPERS ── */
+function div(cls) {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  return d;
+}
+
+function buildTags(tags) {
+  const wrap = div('tags');
+  tags.forEach(t => { const s = div('tag'); s.textContent = t; wrap.appendChild(s); });
+  return wrap;
+}
+
+function buildLinks(links) {
+  const wrap = div('out-links');
+  links.forEach(l => {
+    const a = document.createElement('a');
+    a.className = 'out-link';
+    a.textContent = l.label + ' →';
+    a.href = l.url;
+    if (l.url.startsWith('http') || l.url.startsWith('#')) {
+      if (l.url.startsWith('http')) a.target = '_blank';
+      if (l.url === '#contact') { a.onclick = (e) => { e.preventDefault(); go('contact'); }; }
+    }
+    wrap.appendChild(a);
+  });
+  return wrap;
+}
+
+/* ── NAVIGATION ── */
+function go(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#s-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('p-' + id).classList.add('active');
+  document.getElementById('n-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── THEME ── */
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('t-word').textContent = dark ? 'dark' : 'light';
+}
+
+init();
+</script>
+</body>
+</html>
