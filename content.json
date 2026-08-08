@@ -8,8 +8,7 @@
     "I'm Sachin Raj. I build robotic systems and figure out how to make them reliable.",
     "My background is in mechanical engineering, but my career took me into clinical genomics, where I validated systems that processed data produced by next-generation sequencing (NGS). In that environment, getting a system to run wasn't enough. We had to prove that it produced the right results, consistently and reproducibly.",
     "I'm now building on that foundation with physical systems: robotics, hydraulics, sensors, controls, and the software that connects them.",
-    "The goal is simple: make sure the systems I build work as intended.",
-    "Papers and build logs are open. Tools link to GitHub and PyPI. Leave a note if you want to connect."
+    "The goal is simple: make sure the systems I build are governed, reliable, and work as intended."
   ],
   "projects": [],
   "papers": [],
