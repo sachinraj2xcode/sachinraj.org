@@ -713,7 +713,99 @@
         grid-template-columns: 1fr;
       }
     }
-  </style>
+  
+/* ── BLOG STYLES ── */
+.blog-loading, .blog-empty, .blog-error {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; color: var(--sub);
+  padding: 2rem 0; letter-spacing: 0.05em;
+}
+
+.featured-post {
+  margin-bottom: 3rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.featured-img {
+  width: 100%;
+  aspect-ratio: 16/7;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+}
+.featured-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(20%);
+  transition: filter 0.3s;
+}
+.featured-img img:hover { filter: grayscale(0%); }
+
+.featured-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem; font-weight: 400;
+  line-height: 1.25; margin-bottom: 0.85rem;
+}
+
+.featured-body p {
+  font-size: 0.95rem; color: var(--sub);
+  line-height: 1.8; margin-bottom: 1.25rem;
+}
+
+.post-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem; letter-spacing: 0.07em;
+  color: var(--amber); text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 1px; transition: border-color 0.15s;
+}
+.post-link:hover { border-color: var(--amber); }
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: 1.25rem;
+  margin-bottom: 3rem;
+}
+
+.post-card {
+  background: var(--bg);
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.post-card:hover { background: var(--surface); }
+.post-card:hover .post-card-title { color: var(--amber); }
+
+.post-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.98rem; font-weight: 400;
+  line-height: 1.35; margin-top: 0.4rem;
+  transition: color 0.15s;
+}
+
+
+    .blog-loading { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--sub); padding: 2rem 0; }
+    .featured-post { margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+    .featured-img { width: 100%; aspect-ratio: 16/7; overflow: hidden; margin-bottom: 1.5rem; background: var(--surface); }
+    .featured-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(15%); transition: filter 0.3s; }
+    .featured-img img:hover { filter: grayscale(0%); }
+    .featured-title { font-family: 'Fraunces', serif; font-size: 1.6rem; font-weight: 400; line-height: 1.25; margin-bottom: 0.85rem; }
+    .featured-body p { font-size: 0.95rem; color: var(--sub); line-height: 1.8; margin-bottom: 1.25rem; }
+    .post-link { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.07em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
+    .post-link:hover { border-color: var(--amber); }
+    .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 1.25rem; margin-bottom: 3rem; }
+    .post-card { background: var(--bg); padding: 1.5rem; cursor: pointer; transition: background 0.15s; }
+    .post-card:hover { background: var(--surface); }
+    .post-card:hover .post-card-title { color: var(--amber); }
+    .post-card-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 400; line-height: 1.35; margin-top: 0.4rem; transition: color 0.15s; }
+
+    </style>
 </head>
 
 <body>
@@ -761,7 +853,7 @@
       buildProjects();
       buildPapers();
       buildTools();
-      buildBlog();
+      buildBlog();  // async, handles itself
       buildContact();
     }
 
@@ -905,19 +997,91 @@
       });
     }
 
-    /* ── BLOG ── */
-    function buildBlog() {
+    /* ── BLOG — Blogger API ── */
+    const BLOGGER_FEED = 'https://www.blogger.com/feeds/383089026662479161/posts/default?alt=json&max-results=20';
+
+    async function buildBlog() {
       const el = document.getElementById('p-blog');
       const h = div('page-h1'); h.textContent = 'PrecisionGlue'; el.appendChild(h);
       const s = div('page-sub'); s.textContent = 'Writing on robotics, validation, and the engineering between them. All posts written by Sachin Raj.'; el.appendChild(s);
 
-      DATA.posts.forEach(p => {
-        const e = div('post');
-        const d = div('post-date'); d.textContent = p.date; e.appendChild(d);
-        const t = div('post-title'); t.textContent = p.title; e.appendChild(t);
-        const ex = document.createElement('p'); ex.textContent = p.excerpt; e.appendChild(ex);
-        el.appendChild(e);
-      });
+      const loading = div('blog-loading'); loading.textContent = 'Loading posts...'; el.appendChild(loading);
+
+      try {
+        const res = await fetch(BLOGGER_FEED);
+        const data = await res.json();
+        el.removeChild(loading);
+        const entries = (data.feed && data.feed.entry) || [];
+
+        if (entries.length === 0) {
+          const empty = div('blog-loading'); empty.textContent = 'No posts yet.'; el.appendChild(empty); return;
+        }
+
+        el.appendChild(buildFeaturedPost(entries[0]));
+
+        if (entries.length > 1) {
+          const lbl = div('section-label'); lbl.textContent = 'Earlier posts'; el.appendChild(lbl);
+          const grid = div('blog-grid');
+          entries.slice(1).forEach(e => grid.appendChild(buildPostCard(e)));
+          el.appendChild(grid);
+        }
+      } catch(err) {
+        el.removeChild(loading);
+        const e = div('blog-loading'); e.textContent = 'Could not load posts. Check back soon.'; el.appendChild(e);
+      }
+    }
+
+    function getPostUrl(entry) {
+      const link = (entry.link || []).find(l => l.rel === 'alternate');
+      return link ? link.href : '#';
+    }
+
+    function getPostImage(entry) {
+      if (entry.media$thumbnail) return entry.media$thumbnail.url.replace('/s72-c/', '/s600-c/');
+      const content = entry.content ? entry.content.$t : '';
+      const match = content.match(/<img[^>]+src=["']([^"']+)["']/);
+      return match ? match[1] : null;
+    }
+
+    function getExcerpt(entry) {
+      const content = entry.content ? entry.content.$t : (entry.summary ? entry.summary.$t : '');
+      const text = content.replace(/<[^>]+>/g, '').trim();
+      return text.length > 220 ? text.slice(0, 220).trim() + '…' : text;
+    }
+
+    function formatDate(entry) {
+      const raw = entry.published ? entry.published.$t : '';
+      if (!raw) return '';
+      return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function buildFeaturedPost(entry) {
+      const url = getPostUrl(entry);
+      const img = getPostImage(entry);
+      const wrap = div('featured-post');
+      if (img) {
+        const imgWrap = div('featured-img');
+        const i = document.createElement('img'); i.src = img; i.alt = entry.title.$t;
+        imgWrap.appendChild(i); wrap.appendChild(imgWrap);
+      }
+      const body = div('featured-body');
+      const date = div('post-date'); date.textContent = formatDate(entry); body.appendChild(date);
+      const title = div('featured-title'); title.textContent = entry.title.$t; body.appendChild(title);
+      const excerpt = document.createElement('p'); excerpt.textContent = getExcerpt(entry); body.appendChild(excerpt);
+      const link = document.createElement('a');
+      link.className = 'post-link'; link.href = url; link.target = '_blank';
+      link.textContent = 'Read on Blogger →'; body.appendChild(link);
+      wrap.appendChild(body);
+      return wrap;
+    }
+
+    function buildPostCard(entry) {
+      const url = getPostUrl(entry);
+      const card = div('post-card');
+      card.onclick = () => window.open(url, '_blank');
+      const date = div('post-date'); date.textContent = formatDate(entry); card.appendChild(date);
+      const title = div('post-card-title'); title.textContent = entry.title.$t; card.appendChild(title);
+      return card;
     }
 
     /* ── CONTACT ── */
