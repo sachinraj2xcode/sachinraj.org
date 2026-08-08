@@ -810,6 +810,23 @@
     .tool-date { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em; color: var(--amber); }
     .tool-howto { font-style: italic; color: var(--sub); font-size: 0.88rem; margin-top: 0.5rem; }
 
+    
+    .paper-folder { margin-top: 1.1rem; padding: 0.85rem 1rem; background: var(--surface); border: 1px solid var(--border); border-left: 2px solid var(--amber); display: flex; flex-direction: column; gap: 0.6rem; }
+    .paper-folder-label { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--sub); }
+
+    
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-top: 1rem; }
+    .tool-tile { background: var(--bg); padding: 1.5rem; transition: background 0.15s; }
+    .tool-tile:hover { background: var(--surface); }
+    .tool-tile-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.65rem; }
+    .tool-tile-name { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 500; color: var(--amber); }
+    .tool-tile-dates { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; flex-shrink: 0; }
+    .tool-tile-date { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; color: var(--sub); white-space: nowrap; }
+    .tool-tile p { font-size: 0.85rem; color: var(--sub); line-height: 1.65; margin-bottom: 1rem; }
+    .tool-tile-links { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .tool-tile-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.05em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
+    .tool-tile-link:hover { border-color: var(--amber); }
+
     </style>
 </head>
 
@@ -1012,17 +1029,34 @@
           // Title, Summary, Journal Name, Link, Date Published
           const [title, summary, journal, link, date] = row;
           const e = div('paper');
+
+          // date top
           if (date) { const d = div('paper-status'); d.textContent = date; e.appendChild(d); }
+
+          // title
           const ti = div('paper-title'); ti.textContent = title; e.appendChild(ti);
-          if (journal) { const j = div('paper-authors'); j.textContent = journal; e.appendChild(j); }
+
+          // summary
           if (summary) { const ab = document.createElement('p'); ab.textContent = summary; e.appendChild(ab); }
-          if (link) {
-            const lw = div('out-links');
-            const a = document.createElement('a');
-            a.className = 'out-link'; a.href = link.startsWith('http') ? link : 'https://' + link;
-            a.target = '_blank'; a.textContent = 'Read paper →';
-            lw.appendChild(a); e.appendChild(lw);
+
+          // journal folder label + link
+          if (journal || link) {
+            const folder = div('paper-folder');
+            if (journal) {
+              const jlabel = div('paper-folder-label');
+              jlabel.textContent = '📁 ' + journal;
+              folder.appendChild(jlabel);
+            }
+            if (link) {
+              const a = document.createElement('a');
+              a.className = 'out-link';
+              a.href = link.startsWith('http') ? link : 'https://' + link;
+              a.target = '_blank'; a.textContent = 'Read paper →';
+              folder.appendChild(a);
+            }
+            e.appendChild(folder);
           }
+
           el.appendChild(e);
         });
       } catch(err) {
@@ -1051,31 +1085,38 @@
           const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
         }
 
+        const grid = div('tools-grid');
         rows.forEach(row => {
-          // Name, Summary, Inception Date, Last Update, Download Link, How to Use
-          const [name, summary, inception, lastUpdate, downloadLink, howToUse] = row;
-          const e = div('tool');
-          const nm = div('tool-name'); nm.textContent = name; e.appendChild(nm);
+          const [name, summary, inception, lastUpdate, downloadLink] = row;
+          const tile = div('tool-tile');
 
-          const meta = div('tool-meta');
-          if (inception) { const i = div('tool-date'); i.textContent = 'Started: ' + inception; meta.appendChild(i); }
-          if (lastUpdate) { const u = div('tool-date'); u.textContent = 'Updated: ' + lastUpdate; meta.appendChild(u); }
-          if (meta.children.length) e.appendChild(meta);
+          // header row — name + dates
+          const top = div('tool-tile-top');
+          const nm = div('tool-tile-name'); nm.textContent = name; top.appendChild(nm);
+          const dates = div('tool-tile-dates');
+          if (inception)  { const i = div('tool-tile-date'); i.textContent = 'Started ' + inception; dates.appendChild(i); }
+          if (lastUpdate) { const u = div('tool-tile-date'); u.textContent = 'Updated ' + lastUpdate; dates.appendChild(u); }
+          if (dates.children.length) top.appendChild(dates);
+          tile.appendChild(top);
 
-          if (summary) { const d = document.createElement('p'); d.textContent = summary; e.appendChild(d); }
-          if (howToUse) { const hw = document.createElement('p'); hw.className = 'tool-howto'; hw.textContent = '→ ' + howToUse; e.appendChild(hw); }
+          // summary
+          if (summary) { const s = document.createElement('p'); s.textContent = summary; tile.appendChild(s); }
 
-          const lw = div('out-links');
+          // links row
+          const lrow = div('tool-tile-links');
           if (downloadLink) {
             const a = document.createElement('a');
-            a.className = 'out-link';
+            a.className = 'tool-tile-link';
             a.href = downloadLink.startsWith('http') ? downloadLink : 'https://' + downloadLink;
-            a.target = '_blank'; a.textContent = 'Download →';
-            lw.appendChild(a);
+            a.target = '_blank'; a.onclick = e => e.stopPropagation();
+            a.textContent = 'Download →'; lrow.appendChild(a);
           }
-          if (lw.children.length) e.appendChild(lw);
-          el.appendChild(e);
+
+          if (lrow.children.length) tile.appendChild(lrow);
+
+          grid.appendChild(tile);
         });
+        el.appendChild(grid);
       } catch(err) {
         el.removeChild(loading);
         const e = div('blog-loading'); e.textContent = 'Could not load tools.'; el.appendChild(e);
