@@ -805,6 +805,11 @@
     .post-card:hover .post-card-title { color: var(--amber); }
     .post-card-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 400; line-height: 1.35; margin-top: 0.4rem; transition: color 0.15s; }
 
+    
+    .tool-meta { display: flex; gap: 1.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+    .tool-date { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.06em; color: var(--amber); }
+    .tool-howto { font-style: italic; color: var(--sub); font-size: 0.88rem; margin-top: 0.5rem; }
+
     </style>
 </head>
 
@@ -844,6 +849,26 @@
     const NAV_LABELS = { home: 'Home', projects: 'Projects', papers: 'Papers', tools: 'Tools', blog: 'Blog', contact: 'Contact' };
 
     let DATA = {};
+
+
+    /* ── CSV PARSER ── */
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const headers = lines[0]; // skip header row
+      return lines.slice(1).map(line => {
+        const cols = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQuotes = !inQuotes; }
+          else if (ch === ',' && !inQuotes) { cols.push(current.trim()); current = ''; }
+          else { current += ch; }
+        }
+        cols.push(current.trim());
+        return cols;
+      }).filter(row => row.some(c => c));
+    }
 
     async function init() {
       const res = await fetch('content.json');
@@ -963,38 +988,98 @@
       });
     }
 
-    /* ── PAPERS ── */
-    function buildPapers() {
+    /* ── PAPERS — Google Sheets ── */
+    const PAPERS_CSV = 'https://docs.google.com/spreadsheets/d/1leDqj46ZbOvijxY8spLcfX4EvUpEDTWdyEOgEhLCs2U/pub?gid=0&single=true&output=csv';
+
+    async function buildPapers() {
       const el = document.getElementById('p-papers');
       const h = div('page-h1'); h.textContent = 'Papers'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Abstracts here. Full text at the journal or preprint server.'; el.appendChild(s);
+      const s = div('page-sub'); s.textContent = 'Published work links out to the journal. Abstracts here.'; el.appendChild(s);
 
-      DATA.papers.forEach(p => {
-        const e = div('paper');
-        const st = div('paper-status'); st.textContent = p.status; e.appendChild(st);
-        const ti = div('paper-title'); ti.textContent = p.title; e.appendChild(ti);
-        const au = div('paper-authors'); au.textContent = p.authors; e.appendChild(au);
-        const ab = document.createElement('p'); ab.textContent = p.abstract; e.appendChild(ab);
-        e.appendChild(buildLinks(p.links));
-        el.appendChild(e);
-      });
+      const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
+
+      try {
+        const res = await fetch(PAPERS_CSV);
+        const text = await res.text();
+        const rows = parseCSV(text);
+        el.removeChild(loading);
+
+        if (rows.length === 0) {
+          const empty = div('blog-loading'); empty.textContent = 'No papers yet.'; el.appendChild(empty); return;
+        }
+
+        rows.forEach(row => {
+          // Title, Summary, Journal Name, Link, Date Published
+          const [title, summary, journal, link, date] = row;
+          const e = div('paper');
+          if (date) { const d = div('paper-status'); d.textContent = date; e.appendChild(d); }
+          const ti = div('paper-title'); ti.textContent = title; e.appendChild(ti);
+          if (journal) { const j = div('paper-authors'); j.textContent = journal; e.appendChild(j); }
+          if (summary) { const ab = document.createElement('p'); ab.textContent = summary; e.appendChild(ab); }
+          if (link) {
+            const lw = div('out-links');
+            const a = document.createElement('a');
+            a.className = 'out-link'; a.href = link.startsWith('http') ? link : 'https://' + link;
+            a.target = '_blank'; a.textContent = 'Read paper →';
+            lw.appendChild(a); e.appendChild(lw);
+          }
+          el.appendChild(e);
+        });
+      } catch(err) {
+        el.removeChild(loading);
+        const e = div('blog-loading'); e.textContent = 'Could not load papers.'; el.appendChild(e);
+      }
     }
 
-    /* ── TOOLS ── */
-    function buildTools() {
+    /* ── TOOLS — Google Sheets ── */
+    const TOOLS_CSV = 'https://docs.google.com/spreadsheets/d/1leDqj46ZbOvijxY8spLcfX4EvUpEDTWdyEOgEhLCs2U/pub?gid=1069999769&single=true&output=csv';
+
+    async function buildTools() {
       const el = document.getElementById('p-tools');
       const h = div('page-h1'); h.textContent = 'Tools'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Open source Python libraries. MIT licensed. Links go directly to GitHub and PyPI.'; el.appendChild(s);
+      const s = div('page-sub'); s.textContent = 'Open source tools. Links go to GitHub and PyPI.'; el.appendChild(s);
 
-      DATA.tools.forEach(t => {
-        const e = div('tool' + (t.type === 'commercial' ? ' tool-commercial' : ''));
-        const name = div('tool-name'); name.textContent = t.name; e.appendChild(name);
-        if (t.version) { const ver = div('tool-ver'); ver.textContent = t.version; e.appendChild(ver); }
-        const desc = document.createElement('p'); desc.textContent = t.description; e.appendChild(desc);
-        if (t.tags.length) e.appendChild(buildTags(t.tags));
-        e.appendChild(buildLinks(t.links));
-        el.appendChild(e);
-      });
+      const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
+
+      try {
+        const res = await fetch(TOOLS_CSV);
+        const text = await res.text();
+        const rows = parseCSV(text);
+        el.removeChild(loading);
+
+        if (rows.length === 0) {
+          const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
+        }
+
+        rows.forEach(row => {
+          // Name, Summary, Inception Date, Last Update, Download Link, How to Use
+          const [name, summary, inception, lastUpdate, downloadLink, howToUse] = row;
+          const e = div('tool');
+          const nm = div('tool-name'); nm.textContent = name; e.appendChild(nm);
+
+          const meta = div('tool-meta');
+          if (inception) { const i = div('tool-date'); i.textContent = 'Started: ' + inception; meta.appendChild(i); }
+          if (lastUpdate) { const u = div('tool-date'); u.textContent = 'Updated: ' + lastUpdate; meta.appendChild(u); }
+          if (meta.children.length) e.appendChild(meta);
+
+          if (summary) { const d = document.createElement('p'); d.textContent = summary; e.appendChild(d); }
+          if (howToUse) { const hw = document.createElement('p'); hw.className = 'tool-howto'; hw.textContent = '→ ' + howToUse; e.appendChild(hw); }
+
+          const lw = div('out-links');
+          if (downloadLink) {
+            const a = document.createElement('a');
+            a.className = 'out-link';
+            a.href = downloadLink.startsWith('http') ? downloadLink : 'https://' + downloadLink;
+            a.target = '_blank'; a.textContent = 'Download →';
+            lw.appendChild(a);
+          }
+          if (lw.children.length) e.appendChild(lw);
+          el.appendChild(e);
+        });
+      } catch(err) {
+        el.removeChild(loading);
+        const e = div('blog-loading'); e.textContent = 'Could not load tools.'; el.appendChild(e);
+      }
     }
 
     /* ── BLOG — Blogger API ── */
