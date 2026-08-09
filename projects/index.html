@@ -1058,65 +1058,78 @@
 
       const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-      try {
-        const res = await fetch('/projects.csv');
-        const text = await res.text();
-        const rows = parseCSV(text);
-        el.removeChild(loading);
+      const PROJECTS_FEED = 'https://www.blogger.com/feeds/5275687766172546667/posts/default?alt=json-in-script&max-results=20';
+      const callbackName = 'projectsCallback_' + Date.now();
+      const script = document.createElement('script');
+      script.src = PROJECTS_FEED + '&callback=' + callbackName;
 
-        if (rows.length === 0) {
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        try { el.removeChild(loading); } catch(e) {}
+
+        const entries = (data.feed && data.feed.entry) || [];
+        if (entries.length === 0) {
           const empty = div('blog-loading'); empty.textContent = 'No projects yet.'; el.appendChild(empty); return;
         }
 
-        rows.forEach(row => {
-          const [title, imageUrl, summary, year, youtubeUrl] = row;
+        entries.forEach(entry => {
           const card = div('project-card');
 
-          if (imageUrl) {
+          // get image from post if any
+          const imgUrl = entry.media$thumbnail ? entry.media$thumbnail.url.replace('/s72-c/', '/s600-c/') : null;
+          if (imgUrl) {
             const img = document.createElement('img');
-            img.src = imageUrl; img.alt = title;
+            img.src = imgUrl; img.alt = entry.title.$t;
             img.className = 'project-img';
             card.appendChild(img);
           }
 
+          // header — title + date
           const header = div('project-header');
-          const t = div('project-title'); t.textContent = title; header.appendChild(t);
-          if (year) { const y = div('entry-year'); y.textContent = year; header.appendChild(y); }
+          const t = div('project-title'); t.textContent = entry.title.$t; header.appendChild(t);
+          const date = entry.published ? entry.published.$t : '';
+          if (date) {
+            const y = div('entry-year');
+            y.textContent = new Date(date).getFullYear();
+            header.appendChild(y);
+          }
           card.appendChild(header);
 
-          if (summary) {
+          // expandable summary — render HTML content (links included)
+          const content = entry.content ? entry.content.$t : '';
+          if (content) {
             const toggle = div('project-toggle');
             toggle.textContent = 'Summary ▾';
             const body = div('project-body');
-            body.textContent = summary;
+            body.innerHTML = content;
             body.style.display = 'none';
+            // make all links open in new tab
+            body.querySelectorAll && setTimeout(() => {
+              body.querySelectorAll('a').forEach(a => a.target = '_blank');
+            }, 0);
             toggle.onclick = () => {
               const open = body.style.display !== 'none';
               body.style.display = open ? 'none' : 'block';
               toggle.textContent = open ? 'Summary ▾' : 'Summary ▴';
+              // set links to open in new tab after render
+              body.querySelectorAll('a').forEach(a => a.target = '_blank');
             };
             card.appendChild(toggle);
             card.appendChild(body);
           }
 
-          if (youtubeUrl) {
-            const lrow = div('out-links');
-            const a = document.createElement('a');
-            a.className = 'out-link';
-            a.href = youtubeUrl.startsWith('http') ? youtubeUrl : 'https://' + youtubeUrl;
-            a.target = '_blank';
-            a.textContent = 'Watch on YouTube →';
-            lrow.appendChild(a);
-            card.appendChild(lrow);
-          }
-
           el.appendChild(card);
         });
+      };
 
-      } catch(err) {
+      script.onerror = function() {
+        delete window[callbackName];
         try { el.removeChild(loading); } catch(e) {}
         const e = div('blog-loading'); e.textContent = 'Could not load projects.'; el.appendChild(e);
-      }
+      };
+
+      document.head.appendChild(script);
     }
 
     /* ── PAPERS — Google Sheets ── */
