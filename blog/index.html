@@ -1213,24 +1213,81 @@
       window[callbackName] = function(data) {
         delete window[callbackName];
         document.head.removeChild(script);
-        el.removeChild(loading);
+        try { el.removeChild(loading); } catch(e) {}
 
         const entries = (data.feed && data.feed.entry) || [];
-        if (entries.length === 0) {
+        if (!entries.length) {
           const empty = div('blog-loading'); empty.textContent = 'No posts yet — check back soon.'; el.appendChild(empty); return;
         }
 
-        el.appendChild(buildFeaturedPost(entries[0]));
+        // collect all labels
+        const labelSet = new Set();
+        entries.forEach(entry => {
+          (entry.category || []).forEach(c => labelSet.add(c.term));
+        });
 
-        if (entries.length > 1) {
-          entries.slice(1).forEach(e => el.appendChild(buildPostCard(e)));
+        // filter bar
+        if (labelSet.size > 0) {
+          const filterBar = div('filter-bar');
+          let activeLabel = null;
+
+          const allBtn = div('filter-btn active');
+          allBtn.textContent = 'All';
+          allBtn.onclick = () => {
+            filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            allBtn.classList.add('active');
+            renderEntries(entries);
+          };
+          filterBar.appendChild(allBtn);
+
+          labelSet.forEach(label => {
+            const btn = div('filter-btn');
+            btn.textContent = label;
+            btn.onclick = () => {
+              filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              const filtered = entries.filter(e => (e.category || []).some(c => c.term === label));
+              renderEntries(filtered);
+            };
+            filterBar.appendChild(btn);
+          });
+
+          el.appendChild(filterBar);
         }
+
+        const listEl = div('blog-list');
+        el.appendChild(listEl);
+
+        function renderEntries(list) {
+          listEl.innerHTML = '';
+          list.forEach((entry, i) => {
+            const url = getPostUrl(entry);
+            const img = getPostImage(entry);
+            const tile = div('blog-tile');
+            tile.onclick = () => window.open(url, '_blank');
+
+            const left = div('blog-tile-left');
+            const toprow = div('featured-top');
+            const date = div('post-date'); date.textContent = formatDate(entry); toprow.appendChild(date);
+            if (i === 0) { const badge = div('latest-badge'); badge.textContent = 'Latest'; toprow.appendChild(badge); }
+            left.appendChild(toprow);
+            const title = div('featured-title'); title.textContent = entry.title.$t; left.appendChild(title);
+            tile.appendChild(left);
+
+            const right = div('blog-tile-right');
+            if (img) { const im = document.createElement('img'); im.src = img; im.alt = ''; right.appendChild(im); }
+            tile.appendChild(right);
+
+            listEl.appendChild(tile);
+          });
+        }
+
+        renderEntries(entries);
       };
 
       script.onerror = function() {
         delete window[callbackName];
-        document.head.removeChild(script);
-        el.removeChild(loading);
+        try { el.removeChild(loading); } catch(e) {}
         const e = div('blog-loading'); e.textContent = 'No posts yet — check back soon.'; el.appendChild(e);
       };
 
