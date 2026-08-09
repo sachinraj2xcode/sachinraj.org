@@ -929,10 +929,11 @@
       }).filter(row => row.some(c => c));
     }
 
-    async function init() {
+    async function init(activePage) {
       const res = await fetch('/content.json');
       DATA = await res.json();
       buildSidebar();
+      if (activePage) activatePage(activePage);
       buildHome();
       buildProjects();
       buildPapers();
@@ -1375,8 +1376,7 @@
       document.getElementById('t-word').textContent = dark ? 'dark' : 'light';
     }
 
-    init();
-    activatePage('blog');
+    init('blog');
     </script>
 </body>
 
