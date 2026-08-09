@@ -1091,25 +1091,14 @@
           const sumMatch = fullText.match(/Summary\s*:\s*["\u201c](.+?)["\u201d](?=\s*Links|\s*$)/si);
           const summaryText = sumMatch ? sumMatch[1].trim() : '';
 
-          // extract links — from both raw text array AND actual <a> href attributes
-          const linkMatch = fullText.match(/Links\s*:\s*\[([^\]]*)\]/si);
-          const rawUrls = linkMatch ? (linkMatch[1].match(/https?:\/\/[^\s"',\]]+/g) || []) : [];
-          // also grab hrefs from <a> tags inside the Links section
-          const allLinks = Array.from(tmp.querySelectorAll('a')).map(a => a.href).filter(u =>
+          // extract links only from <a> hrefs — Blogger auto-converts URLs to links
+          const linkUrls = Array.from(tmp.querySelectorAll('a')).map(a => a.href).filter(u =>
             u && u.startsWith('http') &&
             !u.includes('blogger.com') &&
             !u.includes('blogspot.com') &&
-            !u.includes('googleusercontent.com')
-          );
-          // merge both sources, deduplicate by normalizing URLs
-          const normalize = u => u.replace(/\/+$/, '').toLowerCase().trim();
-          const seen = new Set();
-          const linkUrls = [...rawUrls, ...allLinks].filter(u => {
-            const n = normalize(u);
-            if (seen.has(n)) return false;
-            seen.add(n);
-            return true;
-          });
+            !u.includes('googleusercontent.com') &&
+            !u.includes('google.com')
+          ).filter((u, i, arr) => arr.indexOf(u) === i);
 
           // thumbnail
           const imgUrl = entry.media$thumbnail
