@@ -930,7 +930,7 @@
     }
 
     async function init() {
-      const res = await fetch('content.json');
+      const res = await fetch('/content.json');
       DATA = await res.json();
       buildSidebar();
       buildHome();
@@ -1376,7 +1376,7 @@
     }
 
     init();
-    activatePage('home');
+    activatePage('contact');
     </script>
 </body>
 
