@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -885,6 +885,14 @@
     .proj-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.05em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
     .proj-link:hover { border-color: var(--amber); }
 
+    
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub); background: var(--surface); border: 1px solid var(--border); padding: 0.35rem 0.85rem; cursor: pointer; border-radius: 99px; transition: all 0.15s; user-select: none; }
+    .filter-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--bg); }
+    .filter-btn.active { background: var(--amber); color: var(--bg); border-color: var(--amber); font-weight: 500; }
+    .proj-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem; }
+    .proj-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.55rem; letter-spacing: 0.05em; color: var(--muted, var(--sub)); border: 1px solid var(--border); padding: 0.15rem 0.45rem; border-radius: 2px; }
+
     </style>
 </head>
 
@@ -1078,79 +1086,126 @@
           const empty = div('blog-loading'); empty.textContent = 'No projects yet.'; el.appendChild(empty); return;
         }
 
+        // collect all labels
+        const labelSet = new Set();
         entries.forEach(entry => {
-          const tile = div('proj-tile');
-
-          // parse raw text
-          const rawHtml = entry.content ? entry.content.$t : '';
-          const tmp = document.createElement('div');
-          tmp.innerHTML = rawHtml;
-          const fullText = tmp.textContent || '';
-
-          // extract summary — between Summary: " and "
-          const sumMatch = fullText.match(/Summary\s*:\s*["\u201c](.+?)["\u201d](?=\s*Links|\s*$)/si);
-          const summaryText = sumMatch ? sumMatch[1].trim() : '';
-
-          // extract links only from <a> hrefs — Blogger auto-converts URLs to links
-          const linkUrls = Array.from(tmp.querySelectorAll('a')).map(a => a.href).filter(u =>
-            u && u.startsWith('http') &&
-            !u.includes('blogger.com') &&
-            !u.includes('blogspot.com') &&
-            !u.includes('googleusercontent.com') &&
-            !u.includes('google.com')
-          ).filter((u, i, arr) => arr.indexOf(u) === i);
-
-          // thumbnail
-          const imgUrl = entry.media$thumbnail
-            ? entry.media$thumbnail.url.replace('/s72-c/', '/s200-c/')
-            : null;
-
-          // tile top row
-          const tileTop = div('proj-top');
-          if (imgUrl) {
-            const thumb = document.createElement('img');
-            thumb.src = imgUrl; thumb.alt = ''; thumb.className = 'proj-thumb';
-            tileTop.appendChild(thumb);
-          }
-
-          const meta = div('proj-meta');
-          const titleEl = div('proj-title'); titleEl.textContent = entry.title.$t; meta.appendChild(titleEl);
-          const date = entry.published ? entry.published.$t : '';
-          if (date) { const y = div('proj-year'); y.textContent = new Date(date).getFullYear(); meta.appendChild(y); }
-
-          const toggle = div('proj-toggle'); toggle.textContent = 'Summary ▾'; meta.appendChild(toggle);
-          tileTop.appendChild(meta);
-          tile.appendChild(tileTop);
-
-          // body
-          const body = div('proj-body');
-          body.style.display = 'none';
-          if (summaryText) { const p = document.createElement('p'); p.textContent = summaryText; body.appendChild(p); }
-          if (linkUrls.length) {
-            const lrow = div('proj-links');
-            linkUrls.forEach(url => {
-              const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.className = 'proj-link';
-              let label = 'Link';
-              if (url.includes('youtube.com') || url.includes('youtu.be')) label = 'YouTube';
-              else if (url.includes('github.com')) label = 'GitHub';
-              else if (url.includes('arxiv.org')) label = 'arXiv';
-              else if (url.includes('pypi.org')) label = 'PyPI';
-              else { try { label = new URL(url).hostname.replace('www.',''); } catch(e) {} }
-              a.textContent = label + ' →';
-              lrow.appendChild(a);
-            });
-            body.appendChild(lrow);
-          }
-
-          toggle.onclick = () => {
-            const open = body.style.display !== 'none';
-            body.style.display = open ? 'none' : 'block';
-            toggle.textContent = open ? 'Summary ▾' : 'Summary ▴';
-          };
-
-          tile.appendChild(body);
-          el.appendChild(tile);
+          (entry.category || []).forEach(c => labelSet.add(c.term));
         });
+
+        // filter bar
+        if (labelSet.size > 0) {
+          const filterBar = div('filter-bar');
+          let activeLabel = null;
+
+          const allBtn = div('filter-btn active');
+          allBtn.textContent = 'All';
+          allBtn.onclick = () => {
+            activeLabel = null;
+            filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            allBtn.classList.add('active');
+            renderEntries(entries);
+          };
+          filterBar.appendChild(allBtn);
+
+          labelSet.forEach(label => {
+            const btn = div('filter-btn');
+            btn.textContent = label;
+            btn.onclick = () => {
+              activeLabel = label;
+              filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+              btn.classList.add('active');
+              const filtered = entries.filter(e => (e.category || []).some(c => c.term === label));
+              renderEntries(filtered);
+            };
+            filterBar.appendChild(btn);
+          });
+
+          el.appendChild(filterBar);
+        }
+
+        const listEl = div('proj-list');
+        el.appendChild(listEl);
+
+        function renderEntries(list) {
+          listEl.innerHTML = '';
+          list.forEach(entry => {
+            const tile = div('proj-tile');
+
+            const rawHtml = entry.content ? entry.content.$t : '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = rawHtml;
+            const fullText = tmp.textContent || '';
+
+            const sumMatch = fullText.match(/Summary\s*:\s*["\u201c](.+?)["\u201d](?=\s*Links|\s*$)/si);
+            const summaryText = sumMatch ? sumMatch[1].trim() : '';
+
+            const linkUrls = Array.from(tmp.querySelectorAll('a')).map(a => a.href).filter(u =>
+              u && u.startsWith('http') &&
+              !u.includes('blogger.com') &&
+              !u.includes('blogspot.com') &&
+              !u.includes('googleusercontent.com') &&
+              !u.includes('google.com')
+            ).filter((u, i, arr) => arr.indexOf(u) === i);
+
+            const imgUrl = entry.media$thumbnail
+              ? entry.media$thumbnail.url.replace('/s72-c/', '/s200-c/')
+              : null;
+
+            const tileTop = div('proj-top');
+            if (imgUrl) {
+              const thumb = document.createElement('img');
+              thumb.src = imgUrl; thumb.alt = ''; thumb.className = 'proj-thumb';
+              tileTop.appendChild(thumb);
+            }
+
+            const meta = div('proj-meta');
+            const titleEl = div('proj-title'); titleEl.textContent = entry.title.$t; meta.appendChild(titleEl);
+            const date = entry.published ? entry.published.$t : '';
+            if (date) { const y = div('proj-year'); y.textContent = new Date(date).getFullYear(); meta.appendChild(y); }
+
+            // show labels as tags
+            const labels = (entry.category || []).map(c => c.term);
+            if (labels.length) {
+              const tagRow = div('proj-tags');
+              labels.forEach(l => { const t = div('proj-tag'); t.textContent = l; tagRow.appendChild(t); });
+              meta.appendChild(tagRow);
+            }
+
+            const toggle = div('proj-toggle'); toggle.textContent = 'Summary ▾'; meta.appendChild(toggle);
+            tileTop.appendChild(meta);
+            tile.appendChild(tileTop);
+
+            const body = div('proj-body');
+            body.style.display = 'none';
+            if (summaryText) { const p = document.createElement('p'); p.textContent = summaryText; body.appendChild(p); }
+            if (linkUrls.length) {
+              const lrow = div('proj-links');
+              linkUrls.forEach(url => {
+                const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.className = 'proj-link';
+                let label = 'Link';
+                if (url.includes('youtube.com') || url.includes('youtu.be')) label = 'YouTube';
+                else if (url.includes('github.com')) label = 'GitHub';
+                else if (url.includes('arxiv.org')) label = 'arXiv';
+                else if (url.includes('pypi.org')) label = 'PyPI';
+                else { try { label = new URL(url).hostname.replace('www.',''); } catch(e) {} }
+                a.textContent = label + ' →';
+                lrow.appendChild(a);
+              });
+              body.appendChild(lrow);
+            }
+
+            toggle.onclick = () => {
+              const open = body.style.display !== 'none';
+              body.style.display = open ? 'none' : 'block';
+              toggle.textContent = open ? 'Summary ▾' : 'Summary ▴';
+            };
+
+            tile.appendChild(body);
+            listEl.appendChild(tile);
+          });
+        }
+
+        renderEntries(entries);
       };
 
       script.onerror = () => {
