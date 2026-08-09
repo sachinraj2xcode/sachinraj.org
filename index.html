@@ -1372,9 +1372,15 @@
       go(id, false);
     });
 
-    // handle direct URL on load
+    // handle direct URL on load + 404 redirect
     window.addEventListener('DOMContentLoaded', () => {
-      const path = window.location.pathname.replace('/', '').replace('/', '') || 'home';
+      const redirectPage = sessionStorage.getItem('redirect_page');
+      if (redirectPage) {
+        sessionStorage.removeItem('redirect_page');
+        go(redirectPage, true);
+        return;
+      }
+      const path = window.location.pathname.replace(/^\//, '') || 'home';
       const validPages = ['home', 'projects', 'papers', 'tools', 'blog', 'contact'];
       if (validPages.includes(path)) go(path, false);
     });
