@@ -1101,8 +1101,15 @@
             !u.includes('blogspot.com') &&
             !u.includes('googleusercontent.com')
           );
-          // merge both sources, deduplicate
-          const linkUrls = [...new Set([...rawUrls, ...allLinks])];
+          // merge both sources, deduplicate by normalizing URLs
+          const normalize = u => u.replace(/\/+$/, '').toLowerCase().trim();
+          const seen = new Set();
+          const linkUrls = [...rawUrls, ...allLinks].filter(u => {
+            const n = normalize(u);
+            if (seen.has(n)) return false;
+            seen.add(n);
+            return true;
+          });
 
           // thumbnail
           const imgUrl = entry.media$thumbnail
