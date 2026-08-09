@@ -1047,8 +1047,8 @@
           el.removeChild(loading);
           const items = data.items || [];
 
-          if (items.length === 0) {
-            const empty = div('blog-loading'); empty.textContent = 'No videos yet.'; el.appendChild(empty); return;
+          if (!items || items.length === 0) {
+            const empty = div('blog-loading'); empty.textContent = 'No videos yet — check back soon.'; el.appendChild(empty); return;
           }
 
           // featured — latest video
@@ -1063,8 +1063,8 @@
           }
         })
         .catch(() => {
-          el.removeChild(loading);
-          const e = div('blog-loading'); e.textContent = 'Could not load videos.'; el.appendChild(e);
+          try { el.removeChild(loading); } catch(e) {}
+          const err = div('blog-loading'); err.textContent = 'No videos yet — check back soon.'; el.appendChild(err);
         });
     }
 
