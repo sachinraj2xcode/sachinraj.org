@@ -869,6 +869,13 @@
     .social-icon-link { text-decoration: none; transition: opacity 0.15s; display: flex; align-items: center; }
     .social-icon-link:hover { opacity: 0.7; }
 
+    
+    .featured-top { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .latest-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--amber); padding: 0.2rem 0.6rem; border-radius: 2px; }
+    .featured-post { padding-bottom: 2.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; cursor: pointer; transition: opacity 0.15s; }
+    .featured-post:hover { opacity: 0.85; }
+    .featured-body p { font-size: 0.95rem; color: var(--sub); line-height: 1.8; margin-top: 0.75rem; }
+
     </style>
 </head>
 
@@ -1206,7 +1213,6 @@
         el.appendChild(buildFeaturedPost(entries[0]));
 
         if (entries.length > 1) {
-          const lbl = div('section-label'); lbl.textContent = 'Earlier posts'; el.appendChild(lbl);
           const grid = div('blog-grid');
           entries.slice(1).forEach(e => grid.appendChild(buildPostCard(e)));
           el.appendChild(grid);
@@ -1249,20 +1255,17 @@
 
     function buildFeaturedPost(entry) {
       const url = getPostUrl(entry);
-      const img = getPostImage(entry);
       const wrap = div('featured-post');
-      if (img) {
-        const imgWrap = div('featured-img');
-        const i = document.createElement('img'); i.src = img; i.alt = entry.title.$t;
-        imgWrap.appendChild(i); wrap.appendChild(imgWrap);
-      }
+      wrap.style.cursor = 'pointer';
+      wrap.onclick = () => window.open(url, '_blank');
+
       const body = div('featured-body');
-      const date = div('post-date'); date.textContent = formatDate(entry); body.appendChild(date);
+      const toprow = div('featured-top');
+      const date = div('post-date'); date.textContent = formatDate(entry); toprow.appendChild(date);
+      const badge = div('latest-badge'); badge.textContent = 'Latest'; toprow.appendChild(badge);
+      body.appendChild(toprow);
       const title = div('featured-title'); title.textContent = entry.title.$t; body.appendChild(title);
       const excerpt = document.createElement('p'); excerpt.textContent = getExcerpt(entry); body.appendChild(excerpt);
-      const link = document.createElement('a');
-      link.className = 'post-link'; link.href = url; link.target = '_blank';
-      link.textContent = 'Read on Blogger →'; body.appendChild(link);
       wrap.appendChild(body);
       return wrap;
     }
