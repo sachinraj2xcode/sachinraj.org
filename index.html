@@ -869,6 +869,16 @@
     .social-icon-link { text-decoration: none; transition: opacity 0.15s; display: flex; align-items: center; }
     .social-icon-link:hover { opacity: 0.7; }
 
+    
+    .project-card { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+    .project-card:last-child { border-bottom: none; }
+    .project-img { width: 100%; max-height: 280px; object-fit: cover; margin-bottom: 1.25rem; display: block; }
+    .project-header { display: flex; justify-content: space-between; align-items: baseline; gap: 1.5rem; margin-bottom: 0.85rem; }
+    .project-title { font-family: 'Fraunces', serif; font-size: 1.2rem; font-weight: 400; line-height: 1.3; }
+    .project-toggle { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--amber); cursor: pointer; margin-bottom: 0.5rem; user-select: none; }
+    .project-toggle:hover { opacity: 0.8; }
+    .project-body { font-size: 0.92rem; color: var(--sub); line-height: 1.8; margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-left: 2px solid var(--amber); }
+
     </style>
 </head>
 
@@ -929,10 +939,11 @@
       }).filter(row => row.some(c => c));
     }
 
-    async function init() {
-      const res = await fetch('content.json');
+    async function init(activePage) {
+      const res = await fetch('/content.json');
       DATA = await res.json();
       buildSidebar();
+      if (activePage) activatePage(activePage);
       buildHome();
       buildProjects();
       buildPapers();
@@ -1040,30 +1051,72 @@
     }
 
     /* ── PROJECTS ── */
-    function buildProjects() {
+    async function buildProjects() {
       const el = document.getElementById('p-projects');
       const h = div('page-h1'); h.textContent = 'Projects'; el.appendChild(h);
       const s = div('page-sub'); s.textContent = 'Browse all projects.'; el.appendChild(s);
 
-      DATA.projects.forEach(p => {
-        const e = div('entry');
-        const top = div('entry-top');
-        const title = div('entry-title'); title.textContent = p.title;
-        const badge = div('badge'); badge.textContent = p.year + (p.status ? ' · ' + p.status : '');
-        top.appendChild(title); top.appendChild(badge);
-        e.appendChild(top);
+      const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-        const desc = document.createElement('p'); desc.textContent = p.description;
-        e.appendChild(desc);
-        if (p.description2) {
-          const desc2 = document.createElement('p'); desc2.textContent = p.description2;
-          e.appendChild(desc2);
+      try {
+        const res = await fetch('/projects.csv');
+        const text = await res.text();
+        const rows = parseCSV(text);
+        el.removeChild(loading);
+
+        if (rows.length === 0) {
+          const empty = div('blog-loading'); empty.textContent = 'No projects yet.'; el.appendChild(empty); return;
         }
 
-        e.appendChild(buildTags(p.tags));
-        e.appendChild(buildLinks(p.links));
-        el.appendChild(e);
-      });
+        rows.forEach(row => {
+          const [title, imageUrl, summary, year, youtubeUrl] = row;
+          const card = div('project-card');
+
+          if (imageUrl) {
+            const img = document.createElement('img');
+            img.src = imageUrl; img.alt = title;
+            img.className = 'project-img';
+            card.appendChild(img);
+          }
+
+          const header = div('project-header');
+          const t = div('project-title'); t.textContent = title; header.appendChild(t);
+          if (year) { const y = div('entry-year'); y.textContent = year; header.appendChild(y); }
+          card.appendChild(header);
+
+          if (summary) {
+            const toggle = div('project-toggle');
+            toggle.textContent = 'Summary ▾';
+            const body = div('project-body');
+            body.textContent = summary;
+            body.style.display = 'none';
+            toggle.onclick = () => {
+              const open = body.style.display !== 'none';
+              body.style.display = open ? 'none' : 'block';
+              toggle.textContent = open ? 'Summary ▾' : 'Summary ▴';
+            };
+            card.appendChild(toggle);
+            card.appendChild(body);
+          }
+
+          if (youtubeUrl) {
+            const lrow = div('out-links');
+            const a = document.createElement('a');
+            a.className = 'out-link';
+            a.href = youtubeUrl.startsWith('http') ? youtubeUrl : 'https://' + youtubeUrl;
+            a.target = '_blank';
+            a.textContent = 'Watch on YouTube →';
+            lrow.appendChild(a);
+            card.appendChild(lrow);
+          }
+
+          el.appendChild(card);
+        });
+
+      } catch(err) {
+        try { el.removeChild(loading); } catch(e) {}
+        const e = div('blog-loading'); e.textContent = 'Could not load projects.'; el.appendChild(e);
+      }
     }
 
     /* ── PAPERS — Google Sheets ── */
@@ -1375,8 +1428,7 @@
       document.getElementById('t-word').textContent = dark ? 'dark' : 'light';
     }
 
-    init();
-    activatePage('home');
+    init('projects');
     </script>
 </body>
 
