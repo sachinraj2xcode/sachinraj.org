@@ -1028,8 +1028,7 @@
     }
 
     /* ── PROJECTS — YouTube RSS ── */
-    const YT_HANDLE = 'StickShiftRobotic';
-    const YT_RSS = `https://www.youtube.com/feeds/videos.xml?user=${YT_HANDLE}`;
+    const YT_CHANNEL_ID = 'UCPfbYlgQOdZlHaHBzI-6xWg';
 
     function buildProjects() {
       const el = document.getElementById('p-projects');
@@ -1042,7 +1041,7 @@
       const callbackName = 'ytCallback_' + Date.now();
       const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=' + YT_CHANNEL_ID)}&api_key=public&count=20`;
 
-      fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user=' + YT_HANDLE)}&count=20`)
+      fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=' + YT_CHANNEL_ID)}&count=20`)
         .then(r => r.json())
         .then(data => {
           el.removeChild(loading);
