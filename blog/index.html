@@ -886,6 +886,12 @@
     .latest-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--amber); padding: 0.2rem 0.6rem; border-radius: 2px; }
     @media (max-width: 600px) { .blog-tile-right { width: 72px; height: 60px; } }
 
+    
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .filter-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub); background: var(--surface); border: 1px solid var(--border); padding: 0.35rem 0.85rem; cursor: pointer; border-radius: 99px; transition: all 0.15s; user-select: none; }
+    .filter-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--bg); }
+    .filter-btn.active { background: var(--amber); color: var(--bg); border-color: var(--amber); font-weight: 500; }
+
     </style>
 </head>
 
