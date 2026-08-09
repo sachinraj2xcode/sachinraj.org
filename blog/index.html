@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -877,13 +877,14 @@
     .featured-body p { font-size: 0.95rem; color: var(--sub); line-height: 1.8; margin-top: 0.75rem; }
 
     
-    .blog-tile { display: flex; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1rem; cursor: pointer; overflow: hidden; transition: border-color 0.2s; min-height: 120px; }
+    .blog-tile { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 0.75rem; cursor: pointer; overflow: hidden; transition: border-color 0.2s; }
     .blog-tile:hover { border-color: var(--amber); }
-    .blog-tile-left { flex: 1; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; justify-content: center; }
-    .blog-tile-right { width: 240px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); overflow: hidden; }
+    .blog-tile-left { flex: 1; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .blog-tile-right { width: 100px; height: 72px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border); overflow: hidden; }
     .blog-tile-right img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .featured-top { display: flex; align-items: center; gap: 0.75rem; }
     .latest-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--amber); padding: 0.2rem 0.6rem; border-radius: 2px; }
+    @media (max-width: 600px) { .blog-tile-right { width: 72px; height: 60px; } }
 
     </style>
 </head>
