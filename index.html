@@ -858,24 +858,6 @@
     .tool-tile-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.05em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
     .tool-tile-link:hover { border-color: var(--amber); }
 
-    
-    .yt-featured { margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); cursor: pointer; }
-    .yt-featured-thumb { position: relative; width: 100%; padding-bottom: 56.25%; background: var(--surface); overflow: hidden; margin-bottom: 1.25rem; }
-    .yt-featured-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
-    .yt-featured:hover .yt-featured-thumb img { opacity: 0.85; }
-    .yt-featured:hover .yt-play { opacity: 1; }
-    .yt-featured-info .featured-title { font-size: 1.2rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-
-    .yt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 1rem; margin-bottom: 3rem; }
-    .yt-card { display: flex; flex-direction: column; gap: 0.5rem; cursor: pointer; }
-    .yt-thumb { position: relative; width: 100%; padding-bottom: 56.25%; background: var(--surface); overflow: hidden; }
-    .yt-thumb img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.2s; }
-    .yt-card:hover .yt-thumb img { opacity: 0.8; }
-    .yt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; background: rgba(0,0,0,0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1rem; pointer-events: none; opacity: 0; transition: opacity 0.2s; padding-left: 3px; }
-    .yt-card:hover .yt-play { opacity: 1; }
-    .yt-card-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 400; line-height: 1.35; color: var(--text); transition: color 0.15s; }
-    .yt-card:hover .yt-card-title { color: var(--amber); }
-
     </style>
 </head>
 
@@ -1027,103 +1009,31 @@
       return block;
     }
 
-    /* ── PROJECTS — YouTube RSS ── */
-    const YT_CHANNEL_ID = 'UCPfbYlgQOdZlHaHBzI-6xWg';
-
+    /* ── PROJECTS ── */
     function buildProjects() {
       const el = document.getElementById('p-projects');
       const h = div('page-h1'); h.textContent = 'Projects'; el.appendChild(h);
       const s = div('page-sub'); s.textContent = 'Browse all projects.'; el.appendChild(s);
 
-      const loading = div('blog-loading'); loading.textContent = 'Loading videos...'; el.appendChild(loading);
+      DATA.projects.forEach(p => {
+        const e = div('entry');
+        const top = div('entry-top');
+        const title = div('entry-title'); title.textContent = p.title;
+        const badge = div('badge'); badge.textContent = p.year + (p.status ? ' · ' + p.status : '');
+        top.appendChild(title); top.appendChild(badge);
+        e.appendChild(top);
 
-      // YouTube RSS via JSONP proxy (rss2json - free)
-      const callbackName = 'ytCallback_' + Date.now();
-      const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=' + YT_CHANNEL_ID)}&api_key=public&count=20`;
+        const desc = document.createElement('p'); desc.textContent = p.description;
+        e.appendChild(desc);
+        if (p.description2) {
+          const desc2 = document.createElement('p'); desc2.textContent = p.description2;
+          e.appendChild(desc2);
+        }
 
-      fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent('https://www.youtube.com/feeds/videos.xml?channel_id=' + YT_CHANNEL_ID)}&count=20`)
-        .then(r => r.json())
-        .then(data => {
-          el.removeChild(loading);
-          const items = data.items || [];
-
-          if (!items || items.length === 0) {
-            const empty = div('blog-loading'); empty.textContent = 'No videos yet — check back soon.'; el.appendChild(empty); return;
-          }
-
-          // featured — latest video
-          el.appendChild(buildFeaturedVideo(items[0]));
-
-          // grid — older videos
-          if (items.length > 1) {
-            const lbl = div('section-label'); lbl.textContent = 'All videos'; el.appendChild(lbl);
-            const grid = div('yt-grid');
-            items.slice(1).forEach(item => grid.appendChild(buildVideoCard(item)));
-            el.appendChild(grid);
-          }
-        })
-        .catch(() => {
-          try { el.removeChild(loading); } catch(e) {}
-          const err = div('blog-loading'); err.textContent = 'No videos yet — check back soon.'; el.appendChild(err);
-        });
-    }
-
-    function getVideoId(item) {
-      // extract video ID from link
-      const match = (item.link || '').match(/v=([^&]+)/);
-      return match ? match[1] : null;
-    }
-
-    function formatYtDate(item) {
-      if (!item.pubDate) return '';
-      return new Date(item.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    function buildFeaturedVideo(item) {
-      const videoId = getVideoId(item);
-      const wrap = div('yt-featured');
-      wrap.style.cursor = 'pointer';
-      wrap.onclick = () => window.open(item.link, '_blank');
-
-      if (videoId) {
-        const thumb = div('yt-featured-thumb');
-        const img = document.createElement('img');
-        img.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        img.alt = item.title;
-        const play = div('yt-play'); play.innerHTML = '▶';
-        thumb.appendChild(img); thumb.appendChild(play);
-        wrap.appendChild(thumb);
-      }
-
-      const info = div('yt-featured-info');
-      const date = div('post-date'); date.textContent = formatYtDate(item); info.appendChild(date);
-      const title = div('featured-title'); title.textContent = item.title; info.appendChild(title);
-      const link = document.createElement('a');
-      link.className = 'post-link'; link.href = item.link; link.target = '_blank';
-      link.textContent = 'Watch on YouTube →'; info.appendChild(link);
-      wrap.appendChild(info);
-      return wrap;
-    }
-
-    function buildVideoCard(item) {
-      const videoId = getVideoId(item);
-      const card = div('yt-card');
-      card.onclick = () => window.open(item.link, '_blank');
-
-      const thumb = div('yt-thumb');
-      if (videoId) {
-        const img = document.createElement('img');
-        img.src = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-        img.alt = item.title;
-        thumb.appendChild(img);
-        const play = div('yt-play'); play.innerHTML = '▶';
-        thumb.appendChild(play);
-      }
-      card.appendChild(thumb);
-
-      const date = div('post-date'); date.textContent = formatYtDate(item); card.appendChild(date);
-      const title = div('yt-card-title'); title.textContent = item.title; card.appendChild(title);
-      return card;
+        e.appendChild(buildTags(p.tags));
+        e.appendChild(buildLinks(p.links));
+        el.appendChild(e);
+      });
     }
 
     /* ── PAPERS — Google Sheets ── */
