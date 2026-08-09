@@ -1070,7 +1070,7 @@
         document.head.removeChild(script);
         try { el.removeChild(loading); } catch(e) {}
 
-        const entries = (data.feed && data.feed.entry) || [];
+        const entries = ((data.feed && data.feed.entry) || []).reverse();
         if (entries.length === 0) {
           const empty = div('blog-loading'); empty.textContent = 'No projects yet.'; el.appendChild(empty); return;
         }
@@ -1297,7 +1297,7 @@
         document.head.removeChild(script);
         el.removeChild(loading);
 
-        const entries = (data.feed && data.feed.entry) || [];
+        const entries = ((data.feed && data.feed.entry) || []).reverse();
         if (entries.length === 0) {
           const empty = div('blog-loading'); empty.textContent = 'No posts yet — check back soon.'; el.appendChild(empty); return;
         }
