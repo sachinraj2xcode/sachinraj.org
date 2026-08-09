@@ -1089,12 +1089,24 @@
           tempDiv.innerHTML = rawContent;
           // remove all img tags from summary
           tempDiv.querySelectorAll('img').forEach(i => i.remove());
-          const cleanText = tempDiv.textContent.replace(/\s+/g, ' ').trim();
-          // collect links
+          // collect real links — exclude blogger image CDN URLs
           const links = Array.from(tempDiv.querySelectorAll('a')).map(a => ({
-            label: a.textContent.trim() || a.href,
+            label: a.textContent.trim(),
             href: a.href
-          })).filter(l => l.href && l.href !== '#');
+          })).filter(l =>
+            l.href &&
+            l.href !== '#' &&
+            !l.href.includes('blogger.googleusercontent.com') &&
+            !l.href.includes('bp.blogspot.com') &&
+            l.label.length > 0 &&
+            !l.label.startsWith('http')
+          );
+          // clean text — remove img, remove "Summary:" "Links:" labels
+          const cleanText = tempDiv.textContent
+            .replace(/Summary\s*:/gi, '')
+            .replace(/Links?\s*:/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
 
           // card top row — thumbnail + title + year
           const topRow = div('project-top');
