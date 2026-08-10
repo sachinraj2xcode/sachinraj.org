@@ -869,6 +869,17 @@
     .social-icon-link { text-decoration: none; transition: opacity 0.15s; display: flex; align-items: center; }
     .social-icon-link:hover { opacity: 0.7; }
 
+    
+    .tools-table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+    .tools-table thead tr { border-bottom: 2px solid var(--border); }
+    .tools-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sub); padding: 0.6rem 1rem 0.6rem 0; text-align: left; font-weight: 400; }
+    .tools-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .tools-table tbody tr:hover { background: var(--surface); }
+    .tools-table td { padding: 0.85rem 1rem 0.85rem 0; color: var(--sub); vertical-align: middle; }
+    .tool-name-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; font-weight: 500; color: var(--text); }
+    .tool-doc-link { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.06em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
+    .tool-doc-link:hover { border-color: var(--amber); }
+
     </style>
 </head>
 
@@ -1132,11 +1143,12 @@
 
       const callbackName = 'toolsCB_' + Date.now();
       const script = document.createElement('script');
-      script.src = 'https://www.blogger.com/feeds/1210007113839952280/posts/default?alt=json-in-script&max-results=20&callback=' + callbackName;
+      script.src = 'https://sachinrajcustomtools.blogspot.com/feeds/posts/default?alt=json-in-script&max-results=20&callback=' + callbackName;
 
       window[callbackName] = function(data) {
+        clearTimeout(timeout);
         delete window[callbackName];
-        document.head.removeChild(script);
+        try { document.head.removeChild(script); } catch(e) {}
         try { el.removeChild(loading); } catch(e) {}
 
         const entries = (data.feed && data.feed.entry) || [];
@@ -1144,7 +1156,15 @@
           const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
         }
 
-        const grid = div('tools-grid');
+        // table
+        const table = document.createElement('table');
+        table.className = 'tools-table';
+
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Name</th><th>Type</th><th>Version</th><th>Docs</th></tr>';
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
 
         entries.forEach(entry => {
           const rawHtml = entry.content ? entry.content.$t : '';
@@ -1162,50 +1182,43 @@
             return '';
           };
 
-          const summary   = get('Summary').replace(/^[""]|[""]$/g, '');
-          const type      = get('Type');
-          const version   = get('Version');
-          const docRaw    = get('Documentation');
-          const linkEl    = Array.from(tmp.querySelectorAll('a')).find(a =>
+          const summary  = get('Summary').replace(/^[""]|[""]$/g, '');
+          const type     = get('Type');
+          const version  = get('Version');
+          const docRaw   = get('Documentation');
+          const linkEl   = Array.from(tmp.querySelectorAll('a')).find(a =>
             a.href && !a.href.includes('blogger.com') && !a.href.includes('blogspot.com')
           );
-          const docLink = linkEl ? linkEl.href : (docRaw.startsWith('http') ? docRaw : '');
+          const docLink = linkEl ? linkEl.href : (docRaw && docRaw.startsWith('http') ? docRaw : '');
           const name = entry.title.$t;
 
-          const tile = div('tool-tile');
+          const tr = document.createElement('tr');
 
-          // top row — name + type/version + doc link
-          const top = div('tool-tile-top');
-          const nm = div('tool-tile-name'); nm.textContent = name; top.appendChild(nm);
-          const meta = div('tool-tile-meta');
-          if (type) { const ty = div('tool-type'); ty.textContent = type; meta.appendChild(ty); }
-          if (version) { const ve = div('tool-version'); ve.textContent = version; meta.appendChild(ve); }
-          top.appendChild(meta);
-          tile.appendChild(top);
+          const tdName = document.createElement('td');
+          tdName.className = 'tool-name-cell';
+          tdName.textContent = name;
+          if (summary) tdName.title = summary;
+          tr.appendChild(tdName);
 
-          // summary
-          if (summary) { const s = document.createElement('p'); s.textContent = summary; tile.appendChild(s); }
+          const tdType = document.createElement('td'); tdType.textContent = type || '—'; tr.appendChild(tdType);
+          const tdVer  = document.createElement('td'); tdVer.textContent = version || '—'; tr.appendChild(tdVer);
 
-          // doc link
+          const tdDoc = document.createElement('td');
           if (docLink) {
-            const lrow = div('out-links');
             const a = document.createElement('a');
-            a.className = 'out-link'; a.href = docLink; a.target = '_blank';
-            a.textContent = 'Read documentation →';
-            lrow.appendChild(a);
-            tile.appendChild(lrow);
+            a.href = docLink; a.target = '_blank'; a.className = 'tool-doc-link';
+            a.textContent = 'Docs →';
+            tdDoc.appendChild(a);
+          } else {
+            tdDoc.textContent = '—';
           }
-
-          grid.appendChild(tile);
+          tr.appendChild(tdDoc);
+          tbody.appendChild(tr);
         });
 
-        el.appendChild(grid);
-      };
-
-      script.onerror = () => {
-        try { el.removeChild(loading); } catch(e) {}
-        const e = div('blog-loading'); e.textContent = 'Could not load tools.'; el.appendChild(e);
-      };
+        table.appendChild(tbody);
+        el.appendChild(table);
+      }
 
       document.head.appendChild(script);
     }
@@ -1251,6 +1264,18 @@
         el.removeChild(loading);
         const e = div('blog-loading'); e.textContent = 'No posts yet — check back soon.'; el.appendChild(e);
       };
+
+      const timeout = setTimeout(() => {
+        if (window[callbackName]) {
+          delete window[callbackName];
+          try { document.head.removeChild(script); } catch(e) {}
+          try { el.removeChild(loading); } catch(e) {}
+          const err = div('blog-loading'); err.textContent = 'Could not load tools — check back soon.'; el.appendChild(err);
+        }
+      }, 8000);
+
+      const origCB = window[callbackName];
+      window[callbackName] = function(data) { clearTimeout(timeout); origCB(data); };
 
       document.head.appendChild(script);
     }
