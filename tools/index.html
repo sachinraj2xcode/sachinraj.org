@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -1130,52 +1130,84 @@
 
       const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-      try {
-        const rows = [
-          ['test', 'test', 'test', 'test', 'https://google.com', 'youtube.com']
-        ];
-        el.removeChild(loading);
+      const callbackName = 'toolsCB_' + Date.now();
+      const script = document.createElement('script');
+      script.src = 'https://www.blogger.com/feeds/1210007113839952280/posts/default?alt=json-in-script&max-results=20&callback=' + callbackName;
 
-        if (rows.length === 0) {
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        try { el.removeChild(loading); } catch(e) {}
+
+        const entries = (data.feed && data.feed.entry) || [];
+        if (!entries.length) {
           const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
         }
 
         const grid = div('tools-grid');
-        rows.forEach(row => {
-          const [name, summary, inception, lastUpdate, downloadLink] = row;
+
+        entries.forEach(entry => {
+          const rawHtml = entry.content ? entry.content.$t : '';
+          const tmp = document.createElement('div');
+          tmp.innerHTML = rawHtml;
+          const text = tmp.textContent || '';
+
+          const get = (key) => {
+            const lines = text.split(/
+|/);
+            for (const line of lines) {
+              const m = line.match(new RegExp('^' + key + '\s*:\s*(.+)$', 'i'));
+              if (m) return m[1].trim();
+            }
+            return '';
+          };
+
+          const summary   = get('Summary').replace(/^[""]|[""]$/g, '');
+          const type      = get('Type');
+          const version   = get('Version');
+          const docRaw    = get('Documentation');
+          const linkEl    = Array.from(tmp.querySelectorAll('a')).find(a =>
+            a.href && !a.href.includes('blogger.com') && !a.href.includes('blogspot.com')
+          );
+          const docLink = linkEl ? linkEl.href : (docRaw.startsWith('http') ? docRaw : '');
+          const name = entry.title.$t;
+
           const tile = div('tool-tile');
 
-          // header row — name + dates
+          // top row — name + type/version + doc link
           const top = div('tool-tile-top');
           const nm = div('tool-tile-name'); nm.textContent = name; top.appendChild(nm);
-          const dates = div('tool-tile-dates');
-          if (inception)  { const i = div('tool-tile-date'); i.textContent = 'Started ' + inception; dates.appendChild(i); }
-          if (lastUpdate) { const u = div('tool-tile-date'); u.textContent = 'Updated ' + lastUpdate; dates.appendChild(u); }
-          if (dates.children.length) top.appendChild(dates);
+          const meta = div('tool-tile-meta');
+          if (type) { const ty = div('tool-type'); ty.textContent = type; meta.appendChild(ty); }
+          if (version) { const ve = div('tool-version'); ve.textContent = version; meta.appendChild(ve); }
+          top.appendChild(meta);
           tile.appendChild(top);
 
           // summary
           if (summary) { const s = document.createElement('p'); s.textContent = summary; tile.appendChild(s); }
 
-          // links row
-          const lrow = div('tool-tile-links');
-          if (downloadLink) {
+          // doc link
+          if (docLink) {
+            const lrow = div('out-links');
             const a = document.createElement('a');
-            a.className = 'tool-tile-link';
-            a.href = downloadLink.startsWith('http') ? downloadLink : 'https://' + downloadLink;
-            a.target = '_blank'; a.onclick = e => e.stopPropagation();
-            a.textContent = 'Download →'; lrow.appendChild(a);
+            a.className = 'out-link'; a.href = docLink; a.target = '_blank';
+            a.textContent = 'Read documentation →';
+            lrow.appendChild(a);
+            tile.appendChild(lrow);
           }
-
-          if (lrow.children.length) tile.appendChild(lrow);
 
           grid.appendChild(tile);
         });
+
         el.appendChild(grid);
-      } catch(err) {
-        el.removeChild(loading);
+      };
+
+      script.onerror = () => {
+        try { el.removeChild(loading); } catch(e) {}
         const e = div('blog-loading'); e.textContent = 'Could not load tools.'; el.appendChild(e);
-      }
+      };
+
+      document.head.appendChild(script);
     }
 
     /* ── BLOG — Blogger API ── */
