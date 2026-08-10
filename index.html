@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -869,6 +869,14 @@
     .social-icon-link { text-decoration: none; transition: opacity 0.15s; display: flex; align-items: center; }
     .social-icon-link:hover { opacity: 0.7; }
 
+    
+    .explore-row { display: flex; align-items: baseline; gap: 0.85rem; flex-wrap: wrap; margin-top: 2.5rem; }
+    .explore-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sub); }
+    .explore-sep { color: var(--sub); font-size: 0.85rem; }
+    .explore-dot { color: var(--border); font-size: 0.7rem; }
+    .explore-link { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; letter-spacing: 0.04em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; cursor: pointer; transition: border-color 0.15s; }
+    .explore-link:hover { border-color: var(--amber); }
+
     </style>
 </head>
 
@@ -992,36 +1000,43 @@
 
       // intro
       const intro = div('intro-block');
-      DATA.intro.forEach((t, i) => {
+      DATA.intro.forEach(t => {
         const p = document.createElement('p');
-        // linkify navigation references
-        p.innerHTML = t
-          .replace('Papers', '<a onclick="go(\'papers\')">Papers</a>')
-          .replace('Tools', '<a onclick="go(\'tools\')">Tools</a>')
-          .replace('blog', '<a onclick="go(\'blog\')">blog</a>');
+        p.textContent = t;
         intro.appendChild(p);
       });
       el.appendChild(intro);
 
-      // projects index
-      el.appendChild(buildIdx('Projects', DATA.projects.map(p => ({
-        title: p.title, meta: p.year + (p.status ? ' · ' + p.status : ''), page: 'projects'
-      }))));
+      // explore links
+      const explore = div('explore-row');
 
-      // papers index
-      el.appendChild(buildIdx('Papers', DATA.papers.map(p => ({
-        title: p.title, meta: p.status.toLowerCase(), page: 'papers'
-      }))));
+      const label = div('explore-label');
+      label.textContent = 'Explore my work';
+      explore.appendChild(label);
 
-      // tools index
-      el.appendChild(buildIdx('Tools', DATA.tools.filter(t => t.type === 'free').map(t => ({
-        title: t.name + ' — ' + t.description.split('.')[0].toLowerCase(), meta: 'Python', page: 'tools'
-      }))));
+      const sep = document.createElement('span');
+      sep.className = 'explore-sep';
+      sep.textContent = '—';
+      explore.appendChild(sep);
 
-      // blog index
-      el.appendChild(buildIdx('Latest Posts', DATA.posts.slice(0, 3).map(p => ({
-        title: p.title, meta: p.date, page: 'blog'
-      }))));
+      const pages = ['projects', 'papers', 'tools', 'blog'];
+      const labels = ['Projects', 'Papers', 'Tools', 'Blog'];
+
+      pages.forEach((page, i) => {
+        if (i > 0) {
+          const dot = document.createElement('span');
+          dot.className = 'explore-dot';
+          dot.textContent = '·';
+          explore.appendChild(dot);
+        }
+        const a = document.createElement('a');
+        a.className = 'explore-link';
+        a.textContent = labels[i];
+        a.onclick = () => go(page);
+        explore.appendChild(a);
+      });
+
+      el.appendChild(explore);
     }
 
     function buildIdx(label, rows) {

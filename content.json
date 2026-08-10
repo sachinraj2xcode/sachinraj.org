@@ -1,33 +1,36 @@
 {
   "site": {
     "name": "Sachin Raj",
-    "role": "Robotics · Validation · Systems",
+    "role": "Robotics \u00b7 Validation \u00b7 Systems",
     "domain": "sachinraj.org"
   },
-
   "intro": [
-    "I'm Sachin Raj. I build robotic systems and I validate them — the same person doing both, on purpose.",
-    "My background is mechanical engineering. I've spent years working in environments where data pipelines feed directly into high-stakes decisions, and where a silent processing error is the worst kind. That work taught me how to prove a system is correct — not just that it runs, but that it produces what it claims to produce, reproducibly, with a documentation trail that survives scrutiny.",
-    "I'm now applying that same standard to physical systems I build myself. Robots, hydraulic arms, sensor pipelines. The methodology transfers. The stakes change.",
-    "Papers and build logs are open. Tools link to GitHub and PyPI. Leave a note if you want to connect."
+    "I'm Sachin Raj. I build robotic systems and validate them \u2014 the same person doing both, on purpose.",
+    "My background is mechanical engineering. I've spent years in regulated environments where data pipelines drive high-stakes decisions \u2014 genomic diagnostics, clinical data quality, sequencer output moving through bioinformatics workflows where a silent error has consequences. That work taught me how to prove a system is correct: not just that it runs, but that it produces what it claims to produce, reproducibly, with documentation that holds up to scrutiny.",
+    "I'm now applying that same validation discipline to physical systems \u2014 robotics, hydraulic arms, sensor pipelines. The methodology transfers. The stakes change."
   ],
-
-  "projects": [],
-
-  "papers": [],
-
-  "tools": [],
-
-  "posts": [],
-
   "socials": [
-    { "label": "LinkedIn",     "url": "https://www.linkedin.com/in/sachin-raj-sr/" },
-    { "label": "GitHub",       "url": "#" },
-    { "label": "YouTube",      "url": "https://www.youtube.com/@StickShiftRobotic" },
-    { "label": "ResearchGate", "url": "#" },
-    { "label": "X / Twitter",  "url": "#" }
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/sachin-raj-sr/"
+    },
+    {
+      "label": "GitHub",
+      "url": "#"
+    },
+    {
+      "label": "YouTube",
+      "url": "https://www.youtube.com/@StickShiftRobotic"
+    },
+    {
+      "label": "ResearchGate",
+      "url": "#"
+    },
+    {
+      "label": "X / Twitter",
+      "url": "#"
+    }
   ],
-
   "contact": {
     "note": "Open to research collaboration, technical questions about the tools or papers, and conversations with engineers working on robotic systems and validation methodology.",
     "formspree_id": "YOUR_FORMSPREE_ID"
