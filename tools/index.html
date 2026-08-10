@@ -1319,12 +1319,12 @@
           tmp.innerHTML = entry.content ? entry.content.$t : '';
           const text = tmp.textContent || '';
 
-          const get = (key) => {
-            const lines = text.split(/[
-]/);
+                    const get = (key) => {
+            const lines = text.split('\n');
             for (const line of lines) {
-              const m = line.match(new RegExp('^' + key + '\s*:\s*(.+)$', 'i'));
-              if (m) return m[1].replace(/^["“]|["”]$/g, '').trim();
+              if (line.toLowerCase().startsWith(key.toLowerCase() + ':')) {
+                return line.substring(key.length + 1).replace(/^["“]|["”]$/g, '').trim();
+              }
             }
             return '';
           };
