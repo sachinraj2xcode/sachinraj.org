@@ -5,9 +5,9 @@
     "domain": "sachinraj.org"
   },
   "intro": [
-    "I'm Sachin Raj. I build robotic systems and validate them \u2014 the same person doing both, on purpose.",
-    "My background is mechanical engineering. I've spent years in regulated environments where data pipelines drive high-stakes decisions \u2014 genomic diagnostics, clinical data quality, sequencer output moving through bioinformatics workflows where a silent error has consequences. That work taught me how to prove a system is correct: not just that it runs, but that it produces what it claims to produce, reproducibly, with documentation that holds up to scrutiny.",
-    "I'm now applying that same validation discipline to physical systems \u2014 robotics, hydraulic arms, sensor pipelines. The methodology transfers. The stakes change."
+    "I'm Sachin Raj. My work focuses on building and validating technical systems.",
+    "My background is in mechanical engineering, with professional experience in regulated healthcare technology, including genomic diagnostics, clinical data, bioinformatics workflows, and enterprise systems. Much of my work has focused on validation, data quality, and ensuring systems produce reliable and reproducible results.",
+    "I'm applying that experience to robotics and physical systems, with a focus on building, testing, and validating robotic systems, sensors, and their supporting software."
   ],
   "socials": [
     {
@@ -43,7 +43,7 @@
     "projects": true,
     "papers": true,
     "tools": true,
-    "blog": false,
+    "blog": true,
     "contact": true
   }
 }
