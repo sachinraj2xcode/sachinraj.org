@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -869,6 +869,16 @@
     .social-icon-link { text-decoration: none; transition: opacity 0.15s; display: flex; align-items: center; }
     .social-icon-link:hover { opacity: 0.7; }
 
+    
+    .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s; }
+    .paper-card:hover { border-color: var(--amber); }
+    .paper-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sub); margin-bottom: 0.6rem; }
+    .paper-card-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.35; color: var(--text); margin-bottom: 0.5rem; }
+    .paper-card-authors { font-size: 0.85rem; color: var(--sub); margin-bottom: 0.75rem; }
+    .paper-card-abstract { font-size: 0.88rem; color: var(--sub); line-height: 1.75; margin-bottom: 1rem; font-style: italic; }
+    .paper-card-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
+    .paper-card-link:hover { border-color: var(--amber); }
+
     </style>
 </head>
 
@@ -1073,51 +1083,83 @@
     async function buildPapers() {
       const el = document.getElementById('p-papers');
       const h = div('page-h1'); h.textContent = 'Papers'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = 'Published work links out to the journal. Abstracts here.'; el.appendChild(s);
+      const s = div('page-sub'); s.textContent = 'Published work. Full text at the journal.'; el.appendChild(s);
 
       const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-      try {
-        const rows = [
-          ['test', 'test', 'test', 'https://google.com', 'test']
-        ];
-        el.removeChild(loading);
+      const callbackName = 'papersCB_' + Date.now();
+      const script = document.createElement('script');
+      script.src = 'https://www.blogger.com/feeds/3067196305070563019/posts/default?alt=json-in-script&max-results=20&callback=' + callbackName;
 
-        if (rows.length === 0) {
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        try { el.removeChild(loading); } catch(e) {}
+
+        const entries = (data.feed && data.feed.entry) || [];
+        if (!entries.length) {
           const empty = div('blog-loading'); empty.textContent = 'No papers yet.'; el.appendChild(empty); return;
         }
 
-        const papersRow = div('papers-row');
-        rows.forEach(row => {
-          const [title, summary, journal, link, date] = row;
+        entries.forEach(entry => {
+          const rawHtml = entry.content ? entry.content.$t : '';
+          const tmp = document.createElement('div');
+          tmp.innerHTML = rawHtml;
+          const text = tmp.textContent || '';
+
+          // parse fields
+          const get = (key) => {
+            const m = text.match(new RegExp(key + '\s*:\s*(.+?)(?=\n|$)', 'im'));
+            return m ? m[1].trim() : '';
+          };
+
+          const journal   = get('Journal');
+          const date      = get('Publication Date');
+          const author    = get('Author');
+          const abstract  = get('Abstract');
+          const linkEl    = tmp.querySelector('a');
+          const link      = linkEl ? linkEl.href : get('Journal Paper Link');
+
+          // title comes from the blog post title
+          const title = entry.title.$t;
+
           const card = div('paper-card');
 
-          // document thumbnail
-          const thumb = div('paper-thumb');
-          thumb.innerHTML = `
-            <div class="pt-title">\${title || ''}</div>
-            <div class="pt-meta">\${journal ? journal + '<br>' : ''}\${date || ''}</div>
-            <div class="pt-section">Abstract:</div>
-            <div class="pt-body">\${summary || ''}</div>
-            <div class="pt-lines"></div>
-          `;
-          card.appendChild(thumb);
+          if (journal || date) {
+            const meta = div('paper-card-meta');
+            meta.textContent = [journal, date].filter(Boolean).join(' · ');
+            card.appendChild(meta);
+          }
 
-          // read link below card
-          const readLink = document.createElement('a');
-          readLink.className = 'paper-read-link';
-          readLink.textContent = 'Read paper ...';
-          readLink.href = link ? (link.startsWith('http') ? link : 'https://' + link) : '#';
-          readLink.target = '_blank';
-          card.appendChild(readLink);
+          const t = div('paper-card-title'); t.textContent = title; card.appendChild(t);
 
-          papersRow.appendChild(card);
+          if (author) {
+            const au = div('paper-card-authors'); au.textContent = author; card.appendChild(au);
+          }
+
+          if (abstract) {
+            const ab = document.createElement('p'); ab.className = 'paper-card-abstract'; ab.textContent = abstract; card.appendChild(ab);
+          }
+
+          if (link && !link.includes('blogger.com') && !link.includes('google.com/url')) {
+            const a = document.createElement('a');
+            a.className = 'paper-card-link';
+            a.href = link.startsWith('http') ? link : 'https://' + link;
+            a.target = '_blank';
+            a.textContent = 'Read paper on ' + (journal || 'journal') + ' →';
+            card.appendChild(a);
+          }
+
+          el.appendChild(card);
         });
-        el.appendChild(papersRow);
-      } catch(err) {
-        el.removeChild(loading);
+      };
+
+      script.onerror = () => {
+        try { el.removeChild(loading); } catch(e) {}
         const e = div('blog-loading'); e.textContent = 'Could not load papers.'; el.appendChild(e);
-      }
+      };
+
+      document.head.appendChild(script);
     }
 
     /* ── TOOLS — Google Sheets ── */
