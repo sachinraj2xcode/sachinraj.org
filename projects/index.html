@@ -968,8 +968,10 @@
       document.getElementById('s-role').textContent = DATA.site.role;
       document.title = DATA.site.name;
 
+      const enabledPages = DATA.pages || {};
       const nav = document.getElementById('s-nav');
       PAGES.forEach(id => {
+        if (id !== 'home' && enabledPages[id] === false) return;
         const a = document.createElement('a');
         a.textContent = NAV_LABELS[id];
         a.id = 'n-' + id;

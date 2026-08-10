@@ -38,5 +38,12 @@
   "projects": [],
   "papers": [],
   "tools": [],
-  "posts": []
+  "posts": [],
+  "pages": {
+    "projects": true,
+    "papers": true,
+    "tools": true,
+    "blog": false,
+    "contact": true
+  }
 }
