@@ -870,14 +870,15 @@
     .social-icon-link:hover { opacity: 0.7; }
 
     
-    .paper-card { width: 100%; box-sizing: border-box; border-bottom: 1px solid var(--border); padding: 0.85rem 0; }
-    .paper-card:first-of-type { border-top: 1px solid var(--border); }
-    .paper-card-row { display: flex; align-items: baseline; gap: 1.25rem; flex-wrap: wrap; }
-    .paper-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
-    .paper-card-title { font-family: 'Fraunces', serif; font-size: 0.95rem; font-weight: 400; color: var(--text); flex: 1; line-height: 1.3; }
-    .paper-card-authors { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
-    .paper-toggle { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; color: var(--amber); cursor: pointer; user-select: none; white-space: nowrap; flex-shrink: 0; }
-    .paper-toggle:hover { opacity: 0.75; }
+    .paper-card { width: 100%; box-sizing: border-box; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 0.75rem; transition: border-color 0.2s; }
+    .paper-card:hover { border-color: var(--amber); }
+    .paper-card-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+    .paper-card-left { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+    .paper-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub); }
+    .paper-card-title { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 400; color: var(--text); line-height: 1.35; }
+    .paper-card-authors { font-size: 0; }
+    .paper-toggle { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.08em; color: var(--amber); cursor: pointer; user-select: none; white-space: nowrap; flex-shrink: 0; border: 1px solid var(--amber); padding: 0.25rem 0.75rem; border-radius: 99px; transition: background 0.15s, color 0.15s; }
+    .paper-toggle:hover { background: var(--amber); color: var(--bg); }
     .paper-body { margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.75rem; }
     .paper-abstract { font-size: 0.88rem; color: var(--sub); line-height: 1.75; }
     .paper-card-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; width: fit-content; }
@@ -1131,19 +1132,14 @@
 
           // single row — meta · title · authors · toggle
           const row = div('paper-card-row');
-
+          const left = div('paper-card-left');
           if (journal || date) {
             const meta = div('paper-card-meta');
             meta.textContent = [journal, date].filter(Boolean).join(' · ');
-            row.appendChild(meta);
+            left.appendChild(meta);
           }
-
-          const t = div('paper-card-title'); t.textContent = title; row.appendChild(t);
-
-          if (author) {
-            const au = div('paper-card-authors'); au.textContent = author; row.appendChild(au);
-          }
-
+          const t = div('paper-card-title'); t.textContent = title; left.appendChild(t);
+          row.appendChild(left);
           const toggle = div('paper-toggle'); toggle.textContent = 'Expand ▾'; row.appendChild(toggle);
           card.appendChild(row);
 
@@ -1151,16 +1147,18 @@
           const body = div('paper-body');
           body.style.display = 'none';
 
-          if (author) {
-            const au = div('paper-card-authors'); au.textContent = author; body.appendChild(au);
-          }
-
-          if (abstract) {
-            const ab = document.createElement('p');
-            ab.className = 'paper-abstract';
-            ab.textContent = 'Abstract: ' + abstract;
-            body.appendChild(ab);
-          }
+          const fields = [
+            { label: 'Published', value: date },
+            { label: 'Author(s)', value: author },
+            { label: 'Abstract', value: abstract },
+          ];
+          fields.forEach(f => {
+            if (!f.value) return;
+            const row = div('paper-field');
+            const lbl = div('paper-field-label'); lbl.textContent = f.label; row.appendChild(lbl);
+            const val = div('paper-field-val'); val.textContent = f.value; row.appendChild(val);
+            body.appendChild(row);
+          });
 
           if (link) {
             const a = document.createElement('a');
