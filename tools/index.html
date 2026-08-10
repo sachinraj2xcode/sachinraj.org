@@ -1141,72 +1141,52 @@
 
       const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-      const cbName = 'toolsCB_' + Date.now();
-      const script = document.createElement('script');
-      script.src = 'https://sachinrajcustomtools.blogspot.com/feeds/posts/default?alt=json-in-script&max-results=50&callback=' + cbName;
+      try {
+        const rows = [
+          ['test', 'test', 'test', 'test', 'https://google.com', 'youtube.com']
+        ];
+        el.removeChild(loading);
 
-      window[cbName] = function(data) {
-        delete window[cbName];
-        try { document.head.removeChild(script); } catch(e) {}
-        try { el.removeChild(loading); } catch(e) {}
-
-        const entries = (data.feed && data.feed.entry) || [];
-        if (!entries.length) {
+        if (rows.length === 0) {
           const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
         }
 
-        const table = document.createElement('table');
-        table.className = 'tools-table';
-        table.innerHTML = '<thead><tr><th>Name</th><th>Type</th><th>Version</th><th>Docs</th></tr></thead>';
-        const tbody = document.createElement('tbody');
+        const grid = div('tools-grid');
+        rows.forEach(row => {
+          const [name, summary, inception, lastUpdate, downloadLink] = row;
+          const tile = div('tool-tile');
 
-        entries.forEach(entry => {
-          const tmp = document.createElement('div');
-          tmp.innerHTML = entry.content ? entry.content.$t : '';
-          const text = tmp.textContent || '';
+          // header row — name + dates
+          const top = div('tool-tile-top');
+          const nm = div('tool-tile-name'); nm.textContent = name; top.appendChild(nm);
+          const dates = div('tool-tile-dates');
+          if (inception)  { const i = div('tool-tile-date'); i.textContent = 'Started ' + inception; dates.appendChild(i); }
+          if (lastUpdate) { const u = div('tool-tile-date'); u.textContent = 'Updated ' + lastUpdate; dates.appendChild(u); }
+          if (dates.children.length) top.appendChild(dates);
+          tile.appendChild(top);
 
-          const get = (key) => {
-            const lines = text.split(/[
-]/);
-            for (const line of lines) {
-              const m = line.match(new RegExp('^' + key + '\s*:\s*(.+)$', 'i'));
-              if (m) return m[1].replace(/^["“]|["”]$/g, '').trim();
-            }
-            return '';
-          };
+          // summary
+          if (summary) { const s = document.createElement('p'); s.textContent = summary; tile.appendChild(s); }
 
-          const type    = get('Type');
-          const version = get('Version');
-          const docRaw  = get('Documentation');
-          const linkEl  = Array.from(tmp.querySelectorAll('a')).find(a =>
-            a.href && !a.href.includes('blogger.com') && !a.href.includes('blogspot.com')
-          );
-          const docLink = linkEl ? linkEl.href : (docRaw.startsWith('http') ? docRaw : '');
+          // links row
+          const lrow = div('tool-tile-links');
+          if (downloadLink) {
+            const a = document.createElement('a');
+            a.className = 'tool-tile-link';
+            a.href = downloadLink.startsWith('http') ? downloadLink : 'https://' + downloadLink;
+            a.target = '_blank'; a.onclick = e => e.stopPropagation();
+            a.textContent = 'Download →'; lrow.appendChild(a);
+          }
 
-          const tr = document.createElement('tr');
-          const tdN = document.createElement('td'); tdN.className = 'tool-name-cell'; tdN.textContent = entry.title.$t; tr.appendChild(tdN);
-          const tdT = document.createElement('td'); tdT.textContent = type || '—'; tr.appendChild(tdT);
-          const tdV = document.createElement('td'); tdV.textContent = version || '—'; tr.appendChild(tdV);
-          const tdD = document.createElement('td');
-          if (docLink) {
-            const a = document.createElement('a'); a.href = docLink; a.target = '_blank';
-            a.className = 'tool-doc-link'; a.textContent = 'Docs →'; tdD.appendChild(a);
-          } else { tdD.textContent = '—'; }
-          tr.appendChild(tdD);
-          tbody.appendChild(tr);
+          if (lrow.children.length) tile.appendChild(lrow);
+
+          grid.appendChild(tile);
         });
-
-        table.appendChild(tbody);
-        el.appendChild(table);
-      };
-
-      script.onerror = function() {
-        delete window[cbName];
-        try { el.removeChild(loading); } catch(e) {}
-        const err = div('blog-loading'); err.textContent = 'Could not load tools.'; el.appendChild(err);
-      };
-
-      document.head.appendChild(script);
+        el.appendChild(grid);
+      } catch(err) {
+        el.removeChild(loading);
+        const e = div('blog-loading'); e.textContent = 'Could not load tools.'; el.appendChild(e);
+      }
     }
 
     /* ── BLOG — Blogger API ── */
@@ -1308,52 +1288,79 @@
     }
 
     /* ── CONTACT ── */
-    function buildContact() {
-      const el = document.getElementById('p-contact');
-      const h = div('page-h1'); h.textContent = 'Contact'; el.appendChild(h);
-      const s = div('page-sub'); s.textContent = DATA.contact.note; el.appendChild(s);
+    async function buildTools() {
+      const el = document.getElementById('p-tools');
+      const h = div('page-h1'); h.textContent = 'Tools'; el.appendChild(h);
+      const s = div('page-sub'); s.textContent = 'All publicly available tools.'; el.appendChild(s);
 
-      // socials table
-      DATA.socials.filter(s => s.url !== '#').forEach(s => {
-        const row = div('c-row');
-        const key = div('c-key'); key.textContent = s.label.toLowerCase(); row.appendChild(key);
-        const val = div('c-val');
-        const a = document.createElement('a'); a.href = s.url; a.target = '_blank'; a.textContent = s.url === '#' ? 'placeholder' : s.url.replace('https://', '');
-        val.appendChild(a); row.appendChild(val);
-        el.appendChild(row);
-      });
+      const loading = div('blog-loading'); loading.textContent = 'Loading...'; el.appendChild(loading);
 
-      // form
-      const form = div('c-form');
-      const ft = div('c-form-title'); ft.textContent = 'Leave a note'; form.appendChild(ft);
+      const cbName = 'toolsCB_' + Date.now();
+      const script = document.createElement('script');
+      script.src = 'https://sachinrajcustomtools.blogspot.com/feeds/posts/default?alt=json-in-script&max-results=50&callback=' + cbName;
 
-      const action = `https://formspree.io/f/${DATA.contact.formspree_id}`;
-      const f = document.createElement('form');
-      f.method = 'POST'; f.action = action;
+      window[cbName] = function(data) {
+        delete window[cbName];
+        try { document.head.removeChild(script); } catch(e) {}
+        try { el.removeChild(loading); } catch(e) {}
 
-      f.innerHTML = `
-    <div class="form-grid">
-      <div class="form-field">
-        <label>Name</label>
-        <input type="text" name="name" placeholder="Your name" required>
-      </div>
-      <div class="form-field">
-        <label>Email</label>
-        <input type="email" name="email" placeholder="your@email.com" required>
-      </div>
-      <div class="form-field">
-        <label>Website <span style="opacity:.5;font-size:.9em">(optional)</span></label>
-        <input type="url" name="website" placeholder="https://yoursite.com">
-      </div>
-      <div class="form-field full">
-        <label>Comment</label>
-        <textarea name="message" placeholder="What's on your mind?" required></textarea>
-      </div>
-    </div>
-    <button type="submit" class="form-submit">Send →</button>
-  `;
-      form.appendChild(f);
-      el.appendChild(form);
+        const entries = (data.feed && data.feed.entry) || [];
+        if (!entries.length) {
+          const empty = div('blog-loading'); empty.textContent = 'No tools yet.'; el.appendChild(empty); return;
+        }
+
+        const table = document.createElement('table');
+        table.className = 'tools-table';
+        table.innerHTML = '<thead><tr><th>Name</th><th>Type</th><th>Version</th><th>Docs</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+
+        entries.forEach(entry => {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = entry.content ? entry.content.$t : '';
+          const text = tmp.textContent || '';
+
+          const get = (key) => {
+            const lines = text.split(/[
+]/);
+            for (const line of lines) {
+              const m = line.match(new RegExp('^' + key + '\s*:\s*(.+)$', 'i'));
+              if (m) return m[1].replace(/^["“]|["”]$/g, '').trim();
+            }
+            return '';
+          };
+
+          const type    = get('Type');
+          const version = get('Version');
+          const docRaw  = get('Documentation');
+          const linkEl  = Array.from(tmp.querySelectorAll('a')).find(a =>
+            a.href && !a.href.includes('blogger.com') && !a.href.includes('blogspot.com')
+          );
+          const docLink = linkEl ? linkEl.href : (docRaw.startsWith('http') ? docRaw : '');
+
+          const tr = document.createElement('tr');
+          const tdN = document.createElement('td'); tdN.className = 'tool-name-cell'; tdN.textContent = entry.title.$t; tr.appendChild(tdN);
+          const tdT = document.createElement('td'); tdT.textContent = type || '—'; tr.appendChild(tdT);
+          const tdV = document.createElement('td'); tdV.textContent = version || '—'; tr.appendChild(tdV);
+          const tdD = document.createElement('td');
+          if (docLink) {
+            const a = document.createElement('a'); a.href = docLink; a.target = '_blank';
+            a.className = 'tool-doc-link'; a.textContent = 'Docs →'; tdD.appendChild(a);
+          } else { tdD.textContent = '—'; }
+          tr.appendChild(tdD);
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        el.appendChild(table);
+      };
+
+      script.onerror = function() {
+        delete window[cbName];
+        try { el.removeChild(loading); } catch(e) {}
+        const err = div('blog-loading'); err.textContent = 'Could not load tools.'; el.appendChild(err);
+      };
+
+      document.head.appendChild(script);
     }
 
     /* ── HELPERS ── */
@@ -1408,7 +1415,6 @@
     }
 
     init('tools');
-    activatePage('home');
     </script>
 </body>
 
