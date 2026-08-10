@@ -207,7 +207,7 @@
     .page {
       display: none;
       width: 100%;
-      max-width: 660px;
+      max-width: 900px;
     }
 
     .page.active {
@@ -934,11 +934,6 @@
       DATA = await res.json();
       buildSidebar();
       if (activePage) activatePage(activePage);
-      buildHome();
-      buildProjects();
-      buildPapers();
-      buildTools();
-      buildBlog();  // async, handles itself
       buildContact();
     }
 

@@ -957,12 +957,7 @@
       DATA = await res.json();
       buildSidebar();
       if (activePage) activatePage(activePage);
-      buildHome();
-      buildProjects();
-      buildPapers();
-      buildTools();
-      buildBlog();  // async, handles itself
-      buildContact();
+      buildBlog();
     }
 
     /* ── SIDEBAR ── */
