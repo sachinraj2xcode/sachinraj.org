@@ -873,10 +873,13 @@
     .paper-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; transition: border-color 0.2s; }
     .paper-card:hover { border-color: var(--amber); }
     .paper-card-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sub); margin-bottom: 0.6rem; }
-    .paper-card-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.35; color: var(--text); margin-bottom: 0.5rem; }
+    .paper-card-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 400; line-height: 1.35; color: var(--text); margin-bottom: 0.4rem; }
     .paper-card-authors { font-size: 0.85rem; color: var(--sub); margin-bottom: 0.75rem; }
-    .paper-card-abstract { font-size: 0.88rem; color: var(--sub); line-height: 1.75; margin-bottom: 1rem; font-style: italic; }
-    .paper-card-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; }
+    .paper-toggle { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--amber); cursor: pointer; user-select: none; margin-top: 0.25rem; width: fit-content; }
+    .paper-toggle:hover { opacity: 0.75; }
+    .paper-body { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.85rem; }
+    .paper-abstract { font-size: 0.9rem; color: var(--sub); line-height: 1.75; }
+    .paper-card-link { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.06em; color: var(--amber); text-decoration: none; border-bottom: 1px solid transparent; padding-bottom: 1px; transition: border-color 0.15s; width: fit-content; }
     .paper-card-link:hover { border-color: var(--amber); }
 
     </style>
@@ -1107,49 +1110,68 @@
           tmp.innerHTML = rawHtml;
           const text = tmp.textContent || '';
 
-          // parse fields
           const get = (key) => {
-            const m = text.match(new RegExp(key + '\s*:\s*(.+?)(?=\n|$)', 'im'));
+            const m = text.match(new RegExp(key + '\\s*:\\s*(.+?)(?=\\n|[A-Z][a-z]+:|$)', 'im'));
             return m ? m[1].trim() : '';
           };
 
-          const journal   = get('Journal');
-          const date      = get('Publication Date');
-          const author    = get('Author');
-          const abstract  = get('Abstract');
-          const linkEl    = tmp.querySelector('a');
-          const link      = linkEl ? linkEl.href : get('Journal Paper Link');
-
-          // title comes from the blog post title
+          const journal  = get('Journal');
+          const date     = get('Publication Date');
+          const author   = get('Author');
+          const abstract = get('Abstract');
+          const linkEl   = Array.from(tmp.querySelectorAll('a')).find(a =>
+            a.href && !a.href.includes('blogger.com') && !a.href.includes('blogspot.com')
+          );
+          const link = linkEl ? linkEl.href : '';
           const title = entry.title.$t;
 
           const card = div('paper-card');
 
+          // journal · date
           if (journal || date) {
             const meta = div('paper-card-meta');
             meta.textContent = [journal, date].filter(Boolean).join(' · ');
             card.appendChild(meta);
           }
 
+          // title
           const t = div('paper-card-title'); t.textContent = title; card.appendChild(t);
 
+          // author
           if (author) {
             const au = div('paper-card-authors'); au.textContent = author; card.appendChild(au);
           }
 
+          // expand toggle
+          const toggle = div('paper-toggle'); toggle.textContent = 'Expand ▾'; card.appendChild(toggle);
+
+          // expandable body
+          const body = div('paper-body');
+          body.style.display = 'none';
+
           if (abstract) {
-            const ab = document.createElement('p'); ab.className = 'paper-card-abstract'; ab.textContent = abstract; card.appendChild(ab);
+            const ab = document.createElement('p');
+            ab.className = 'paper-abstract';
+            ab.textContent = 'Abstract: ' + abstract;
+            body.appendChild(ab);
           }
 
-          if (link && !link.includes('blogger.com') && !link.includes('google.com/url')) {
+          if (link) {
             const a = document.createElement('a');
             a.className = 'paper-card-link';
-            a.href = link.startsWith('http') ? link : 'https://' + link;
+            a.href = link;
             a.target = '_blank';
             a.textContent = 'Read paper on ' + (journal || 'journal') + ' →';
-            card.appendChild(a);
+            body.appendChild(a);
           }
 
+          toggle.onclick = () => {
+            const open = body.style.display !== 'none';
+            body.style.display = open ? 'none' : 'block';
+            toggle.textContent = open ? 'Expand ▾' : 'Collapse ▴';
+          };
+
+          card.appendChild(body);
           el.appendChild(card);
         });
       };
